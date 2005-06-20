@@ -1,0 +1,26 @@
+Changes
+Copying
+db-schema.dot
+Makefile.PL
+MANIFEST
+META.yml			Module meta-data (added by MakeMaker)
+np-anon-pcap.pl
+README
+sinfp.db
+SinFP/DB/IpVersion.pm
+SinFP/DB/Os.pm
+SinFP/DB/OsVersionChildren.pm
+SinFP/DB/OsVersion.pm
+SinFP/DB/PatternBinary.pm
+SinFP/DB/PatternTcpFlags.pm
+SinFP/DB/PatternTcpMss.pm
+SinFP/DB/PatternTcpOptions.pm
+SinFP/DB/PatternTcpWindow.pm
+SinFP/DB/Signature.pm
+SinFP/DB/SystemClass.pm
+SinFP/DB/Vendor.pm
+sinfp.pl
+SinFP.pm
+SinFP/SinFP4.pm
+SinFP/SinFP6.pm
+t/01-use.t

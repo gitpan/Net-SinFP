@@ -1,0 +1,39 @@
+//
+// $Id: db-schema.dot,v 1.1.2.5 2005/06/04 21:35:43 gomor Exp $
+//
+
+digraph db_schema {
+   //
+   // Tables
+   //
+   SystemClass   [label="{SystemClass|idSystemClass\lsystemClass\l}", shape=record];
+   Vendor        [label="{Vendor|idVendor\lvendor\l}", shape=record];
+   Os            [label="{Os|idOs\los\l}", shape=record];
+   OsVersion     [label="{OsVersion|idOsVersion\losVersion\l}", shape=record];
+   OsVersionChildren [label="{OsVersionChildren|idSignature\lidOsVersion\l}", shape=record];
+   PatternBinary [label="{PatternBinary|idPatternBinary\lpatternBinary\lpatternBinaryHeuristic1\lpatternBinaryHeuristic2\l}", shape=record];
+   PatternTcpFlags [label="{PatternTcpFlags|idPatternTcpFlags\lpatternTcpFlags\lpatternTcpFlagsHeuristic1\lpatternTcpFlagsHeuristic2\l}", shape=record];
+   PatternTcpWindow [label="{PatternTcpWindow|idPatternTcpWindow\lpatternTcpWindow\lpatternTcpWindowHeuristic1\lpatternTcpWindowHeuristic2\l}", shape=record];
+   PatternTcpOptions [label="{PatternTcpOptions|idPatternTcpOptions\lpatternTcpOptions\lpatternTcpOptionsHeuristic1\lpatternTcpOptionsHeuristic2\l}", shape=record];
+   PatternTcpMss [label="{PatternTcpMss|idPatternTcpMss\lpatternTcpMss\lpatternTcpMssHeuristic1\lpatternTcpMssHeuristic2\l}", shape=record];
+   IpVersion     [label="{IpVersion|idIpVersion\lipVersion\l}", shape=record];
+   Signature     [label="{Signature|idSignature\lidIpVersion\lidSystemClass\lidVendor\lidOs\lidOsVersion\lidT1PatternBinary\lidT1PatternTcpFlags\lidT1PatternTcpWindow\lidT1PatternTcpOptions\lidT1PatternTcpMss\lidT2PatternBinary\lidT2PatternTcpFlags\lidT2PatternTcpWindow\lidT2PatternTcpOptions\lidT2PatternTcpMss\lidT3PatternBinary\lidT3PatternTcpFlags\lidT3PatternTcpWindow\lidT3PatternTcpOptions\lidT3PatternTcpMss\l}", shape=record];
+
+   //
+   // Relations
+   //
+   Signature -> IpVersion     [label=idIpVersion, fontcolor=blue, color=blue];
+   Signature -> SystemClass   [label=idSystemClass, fontcolor=blue, color=blue];
+   Signature -> Vendor        [label=idVendor, fontcolor=blue, color=blue];
+   Signature -> Os            [label=idOs, fontcolor=blue, color=blue];
+   Signature -> OsVersion     [label=idOsVersion, fontcolor=blue, color=blue];
+   Signature -> OsVersion     [label=idOsVersionChildren, fontcolor=blue, color=blue];
+   Signature -> PatternBinary [label=idTPatternBinary, fontcolor=blue, color=blue];
+   Signature -> PatternTcpFlags [label=idTPatternTcpFlags, fontcolor=blue, color=blue];
+   Signature -> PatternTcpWindow [label=idTPatternTcpWindow, fontcolor=blue, color=blue];
+   Signature -> PatternTcpOptions [label=idTPatternTcpOptions, fontcolor=blue, color=blue];
+   Signature -> PatternTcpMss [label=idTPatternTcpMss, fontcolor=blue, color=blue];
+
+   OsVersionChildren -> Signature [label=idSignature, fontcolor=red, color=red];
+   OsVersionChildren -> OsVersion [label=idOsVersion, fontcolor=red, color=red];
+}
