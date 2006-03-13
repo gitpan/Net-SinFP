@@ -1,7 +1,6 @@
 #!/usr/bin/perl
-
 #
-# $Id: sinfp.pl,v 1.1.2.8 2005/06/20 21:42:59 gomor Exp $
+# $Id: sinfp.pl,v 1.1.2.11 2006/03/11 15:44:08 gomor Exp $
 #
 
 use strict;
@@ -9,7 +8,7 @@ use warnings;
 
 use Getopt::Std;
 my %opts;
-getopts('d:i:I:p:r:t:f:v46m:M:PF:HOs:', \%opts);
+getopts('d:i:I:p:r:t:f:v46m:M:PF:HOs:k', \%opts);
 
 die("\n  -- SinFP - $Net::SinFP::VERSION --\n".
     "\n".
@@ -24,6 +23,7 @@ die("\n  -- SinFP - $Net::SinFP::VERSION --\n".
     "\n".
     "       -4: default, use IPv4 fingerprinting\n".
     "       -6: use IPv6 fingerprinting\n".
+    "       -k: keep generated pcap file. Not by default.\n".
     "       -P: passive fingerprinting\n".
     "       -F: pcap filter for passive fingerprinting\n".
     "       -H: use HEURISTIC2 mode to match signatures\n".
@@ -38,6 +38,19 @@ die("\n  -- SinFP - $Net::SinFP::VERSION --\n".
 $opts{p} = 80 unless $opts{p};
 $opts{4} = 1  unless $opts{6};
 
+my $dbFile;
+if ($opts{s}) {
+   $dbFile = $opts{s};
+}
+else {
+   for ('./', '/usr/local/share/sinfp/') {
+      $dbFile = $_. 'sinfp.db';
+      last if -f $dbFile;
+   }
+}
+
+die("Unable to find $dbFile\n") unless -f $dbFile;
+
 use Net::Pkt;
 
 $Env->dev($opts{d}) if $opts{d};
@@ -46,47 +59,38 @@ $Env->ip6($opts{I}) if $opts{I} && $opts{6};
 $Env->mac($opts{M}) if $opts{M};
 $Env->debug(3)      if $opts{v};
 
-my $dbFile;
-if ($opts{s}) {
-   $dbFile = $opts{s};
-}
-else {
-   my @paths = qw(./ /usr/local/share/sinfp/);
-   for (@paths) {
-      $dbFile = $_. 'sinfp.db' if -f $_. 'sinfp.db';
-   }
-}
-
 my $sinfp;
 if ($opts{4}) {
    use Net::SinFP::SinFP4;
 
    $sinfp = Net::SinFP::SinFP4->new(
-      retry   => $opts{r} ? $opts{r} : 3,
-      wait    => $opts{t} ? $opts{t} : 3,
-      offline => $opts{f} ? 1 : 0,
-      target  => $opts{i},
-      port    => $opts{p},
-      passive => $opts{P} ? 1 : 0,
-      h2Match => $opts{H} ? 1 : 0,
-      filter  => $opts{F},
-      dbFile  => $dbFile,
+      retry    => $opts{r} ? $opts{r} : 3,
+      wait     => $opts{t} ? $opts{t} : 3,
+      offline  => $opts{f} ? 1 : 0,
+      target   => $opts{i},
+      port     => $opts{p},
+      passive  => $opts{P} ? 1 : 0,
+      h2Match  => $opts{H} ? 1 : 0,
+      filter   => $opts{F},
+      dbFile   => $dbFile,
+      keepPcap => $opts{k},
    );
 }
 else {
    use Net::SinFP::SinFP6;
 
    $sinfp = Net::SinFP::SinFP6->new(
-      retry   => $opts{r} ? $opts{r} : 3,
-      wait    => $opts{t} ? $opts{t} : 3,
-      offline => $opts{f} ? 1 : 0,
-      target  => $opts{i},
-      port    => $opts{p},
-      mac     => $opts{m},
-      passive => $opts{P} ? 1 : 0,
-      h2Match => $opts{H} ? 1 : 0,
-      filter  => $opts{F},
-      dbFile  => $dbFile,
+      retry    => $opts{r} ? $opts{r} : 3,
+      wait     => $opts{t} ? $opts{t} : 3,
+      offline  => $opts{f} ? 1 : 0,
+      target   => $opts{i},
+      port     => $opts{p},
+      mac      => $opts{m},
+      passive  => $opts{P} ? 1 : 0,
+      h2Match  => $opts{H} ? 1 : 0,
+      filter   => $opts{F},
+      dbFile   => $dbFile,
+      keepPcap => $opts{k},
    );
 }
 
@@ -109,3 +113,5 @@ else {
       ? $sinfp->startOfflinePassive
       : $sinfp->startOnlinePassive;
 }
+
+exit(0);

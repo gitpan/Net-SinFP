@@ -1,5 +1,19 @@
 Revision history for Perl extension Net::SinFP.
 
+1.00 Mon Mar 13 13:37:01 CET 2006
+   - sinfp.db: more signatures (IPv4 and IPv6 ones)
+   - sinfp.db: migration from DBD::SQLite 1.08 to 1.11
+   - Makefile.PL: now installs sinfp.db into /usr/local/share/sinfp when 
+                  installation is run as root
+   - Makefile.PL: sinfp.pl, np-anon-pcap.pl, np-read-anon.pl are installed into 
+                  /usr/local/bin if installation is run as root
+   - SinFP: algorithm to match OSFPs is now quicker (especially in passive mode)
+   - SinFP: algorithm to match OSFPs is now also a little better
+   - SinFP: bugfix when running in offline passive mode (now skip non IP frames)
+   - sinfp.pl: -k parameter to keep generated pcap file (default to not)
+               pcap files are especially useful for unknown fingerprints, send 
+               them to me ;) (use np-anon-pcap.pl to anonymize IPs)
+
 0.92 Mon Jun 20 23:43:53 CEST 2005
    - first public release
 

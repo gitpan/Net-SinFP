@@ -1,4 +1,4 @@
-Net::SinFP version 0.92
+Net::SinFP version 1.00
 =======================
 
 To know more: http://www.gomor.org/
@@ -26,5 +26,5 @@ COPYRIGHT AND LICENSE
 You may distribute this module under the terms of the Artistic license.
 See Copying file in the source distribution archive.
 
-Copyright (c) 2004-2005, Patrice <GomoR> Auffret
+Copyright (c) 2005-2006, Patrice <GomoR> Auffret
 

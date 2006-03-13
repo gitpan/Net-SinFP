@@ -1,5 +1,5 @@
 #
-# $Id: SystemClass.pm,v 1.1.2.10 2005/06/16 19:45:05 gomor Exp $
+# $Id: SystemClass.pm,v 1.1.2.11 2006/03/11 19:30:25 gomor Exp $
 #
 
 package Net::SinFP::DB::SystemClass;
@@ -37,7 +37,7 @@ Patrice E<lt>GomoRE<gt> Auffret
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2005-2006, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of the Artistic license.
 See Copying file in the source distribution archive.

@@ -1,4 +1,9 @@
 #!/usr/bin/perl
+
+#
+# $Id: np-anon-pcap.pl,v 1.1.2.1 2006/03/13 12:39:14 gomor Exp $
+#
+
 use strict;
 use warnings;
 

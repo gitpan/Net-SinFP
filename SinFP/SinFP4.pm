@@ -1,5 +1,5 @@
 #
-# $Id: SinFP4.pm,v 1.10.2.4 2005/06/16 19:45:05 gomor Exp $
+# $Id: SinFP4.pm,v 1.10.2.6 2006/03/11 19:29:55 gomor Exp $
 #
 
 package Net::SinFP::SinFP4;
@@ -36,6 +36,7 @@ sub startOffline {
 
    for ($self->_dump->frames) {   
       next unless $dst ne $Env->ip;
+      next unless $_->isIp;
 
       if ($_->l3->length == 40 && $_->l4->haveFlagSyn && ! $_->l4->haveFlagAck
       &&  ! $self->testSyn1Pkt) {
@@ -105,6 +106,7 @@ sub testSyn1Build {
       tos      => 0,
       id       => $ipId,
       flags    => 0,
+      offset   => 0,
       ttl      => 255,
       protocol => 6,
       dst      => $self->target,
@@ -132,6 +134,7 @@ sub testSyn2Build {
       tos      => 0,
       id       => ++$ipId,
       flags    => 0,
+      offset   => 0,
       ttl      => 255,
       protocol => 6,
       dst      => $self->target,
@@ -166,6 +169,7 @@ sub testSynABuild {
       tos      => 0,
       id       => ++$ipId,
       flags    => 0,
+      offset   => 0,
       ttl      => 255,
       protocol => 6,
       dst      => $self->target,
@@ -192,7 +196,7 @@ Patrice E<lt>GomoRE<gt> Auffret
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2005-2006, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of the Artistic license.
 See Copying file in the source distribution archive.
