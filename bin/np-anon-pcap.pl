@@ -1,11 +1,11 @@
 #!/usr/bin/perl
-
 #
-# $Id: np-anon-pcap.pl,v 1.1.2.1 2006/03/13 12:39:14 gomor Exp $
+# $Id: np-anon-pcap.pl,v 1.1.2.1.2.1 2006/05/13 10:53:10 gomor Exp $
 #
-
 use strict;
 use warnings;
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
 
 use Getopt::Std;
 my %opts;

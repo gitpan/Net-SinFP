@@ -1,11 +1,11 @@
 #!/usr/bin/perl
-
 #
-# $Id: np-read-anon.pl,v 1.1.2.1 2006/03/13 12:51:58 gomor Exp $
+# $Id: np-read-anon.pl,v 1.1.2.1.2.1 2006/05/13 10:53:10 gomor Exp $
 #
-
 use strict;
 use warnings;
+use FindBin qw($Bin);
+use lib "$Bin/../lib";
 
 use Getopt::Std;
 my %opts;

@@ -1,17 +1,15 @@
 #
-# $Id: SinFP.pm,v 1.8.2.29 2006/03/13 12:28:36 gomor Exp $
+# $Id: SinFP.pm,v 1.8.2.29.2.2 2006/05/13 11:02:16 gomor Exp $
 #
-
 package Net::SinFP;
-
 use strict;
 use warnings;
 
-our $VERSION = '1.00';
+our $VERSION = '1.01';
 
 require Exporter;
-require Class::Gomor::Hash;
-our @ISA = qw(Exporter Class::Gomor::Hash);
+require Class::Gomor::Array;
+our @ISA = qw(Exporter Class::Gomor::Array);
 
 our @EXPORT_OK = qw(
    MATCH_ALGORITHM_FULL
@@ -66,8 +64,9 @@ our @AA = qw(
    osfps
    _signatures
 );
-__PACKAGE__->buildAccessorsScalar(\@AS);
-__PACKAGE__->buildAccessorsArray(\@AA);
+__PACKAGE__->cgBuildIndices;
+__PACKAGE__->cgBuildAccessorsScalar(\@AS);
+__PACKAGE__->cgBuildAccessorsArray(\@AA);
 
 use Net::Pkt;
 require DBIx::SQLite::Simple;
@@ -86,11 +85,11 @@ require Net::SinFP::DB::OsVersionChildren;
 
 =head1 NAME
 
-Net::SinFP - a Perl module to do OS fingerprinting
+Net::SinFP - a full operating system stack fingerprinting suite
 
 =head1 DESCRIPTION
 
-Go to http://www.gomor.org/ to know more.
+Go to http://www.gomor.org/sinfp to know more.
 
 =cut
 
@@ -103,7 +102,7 @@ sub new {
       passive  => 0,
       h2Match  => 0,
       osfps    => [],
-      dbFile   => '/usr/local/share/sinfp/sinfp.db',
+      dbFile   => 'sinfp.db',
       keepPcap => 0,
       _db      => 0,
       @_,
@@ -684,7 +683,7 @@ Patrice E<lt>GomoRE<gt> Auffret
 Copyright (c) 2005-2006, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of the Artistic license.
-See Copying file in the source distribution archive.
+See LICENSE.Artistic file in the source distribution archive.
 
 =cut
 

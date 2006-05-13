@@ -1,5 +1,11 @@
 Revision history for Perl extension Net::SinFP.
 
+1.01 Sat May 13 13:03:16 CEST 2006
+   - sinfp.db: new signatures, bugfix on some
+   - sinfp.db: now installs in the same directory as sinfp.pl, no need to 
+               be root anymore
+   - now uses Class::Gomor::Array instead of Hash
+
 1.00 Mon Mar 13 13:37:01 CET 2006
    - sinfp.db: more signatures (IPv4 and IPv6 ones)
    - sinfp.db: migration from DBD::SQLite 1.08 to 1.11

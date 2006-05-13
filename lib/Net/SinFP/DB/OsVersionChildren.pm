@@ -1,18 +1,19 @@
 #
-# $Id: OsVersionChildren.pm,v 1.1.2.4 2006/03/11 19:30:25 gomor Exp $
+# $Id: OsVersionChildren.pm,v 1.1.2.4.2.1 2006/05/13 10:57:50 gomor Exp $
 #
-
 package Net::SinFP::DB::OsVersionChildren;
+use strict;
+use warnings;
 
 require DBIx::SQLite::Simple::Table;
-require Class::Gomor::Hash;
-our @ISA = qw(DBIx::SQLite::Simple::Table Class::Gomor::Hash);
+our @ISA = qw(DBIx::SQLite::Simple::Table);
 
 our @AS = qw(
    idSignature
    idOsVersion
 );
-__PACKAGE__->buildAccessorsScalar(\@AS);
+__PACKAGE__->cgBuildIndices;
+__PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
 =head1 NAME
 
@@ -35,7 +36,7 @@ Patrice E<lt>GomoRE<gt> Auffret
 Copyright (c) 2005-2006, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of the Artistic license.
-See Copying file in the source distribution archive.
+See LICENSE.Artistic file in the source distribution archive.
 
 =cut
 

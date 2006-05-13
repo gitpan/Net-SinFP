@@ -1,13 +1,13 @@
 # http://module-build.sourceforge.net/META-spec.html
 #XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
 name:         Net-SinFP
-version:      1.00
-version_from: SinFP.pm
+version:      1.01
+version_from: lib/Net/SinFP.pm
 installdirs:  site
 requires:
-    Class::Gomor::Hash:            0.22
-    DBIx::SQLite::Simple:          0.30
-    Net::Packet:                   2.06
+    Class::Gomor:                  0
+    DBIx::SQLite::Simple:          0.32
+    Net::Packet:                   2.22
 
 distribution_type: module
 generated_by: ExtUtils::MakeMaker version 6.17
