@@ -1,5 +1,5 @@
 #
-# $Id: SinFP6.pm,v 1.11.2.6.2.1 2006/05/13 10:56:00 gomor Exp $
+# $Id: SinFP6.pm,v 1.11.2.6.2.2 2006/05/31 16:49:43 gomor Exp $
 #
 package Net::SinFP::SinFP6;
 use strict;
@@ -17,7 +17,7 @@ Net::SinFP::SinFP6 - IPv6 OS fingerprinting
 
 =head1 DESCRIPTION
 
-Go to http://www.gomor.org/ to know more.
+Go to http://www.gomor.org/sinfp to know more.
 
 =cut
 

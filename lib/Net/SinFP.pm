@@ -1,11 +1,11 @@
 #
-# $Id: SinFP.pm,v 1.8.2.29.2.2 2006/05/13 11:02:16 gomor Exp $
+# $Id: SinFP.pm,v 1.8.2.29.2.4 2006/05/31 16:49:22 gomor Exp $
 #
 package Net::SinFP;
 use strict;
 use warnings;
 
-our $VERSION = '1.01';
+our $VERSION = '1.02';
 
 require Exporter;
 require Class::Gomor::Array;
@@ -59,6 +59,8 @@ our @AS = qw(
    _tOs
    _tOsVersion
    _tOsVersionChildren
+
+   _unlinkMethod
 );
 our @AA = qw(
    osfps
@@ -102,14 +104,24 @@ sub new {
       passive  => 0,
       h2Match  => 0,
       osfps    => [],
-      dbFile   => 'sinfp.db',
       keepPcap => 0,
       _db      => 0,
       @_,
    );
 
-   $self->_db(DBIx::SQLite::Simple->new(db => $self->dbFile))
-      or die("Can't open db: ". $self->dbFile. "\n");
+   if (! $self->dbFile
+   ||  ! $self->_db(DBIx::SQLite::Simple->new(db => $self->dbFile))) {
+      die("Can't open db: ".$self->dbFile."\n");
+   }
+
+   # Forward compatibility patch with Net::Packet 3.00
+   my $unlinkMethod = Net::Packet::Dump->can('unlinkOnDestroy')
+      ? 'unlinkOnDestroy'
+      : 'unlinkOnClean';
+   $self->_unlinkMethod($unlinkMethod);
+
+   $SIG{INT}  = sub { $self->_signalClean };
+   $SIG{TERM} = sub { $self->_signalClean };
 
    $self->_loadSignatures;
 
@@ -257,13 +269,14 @@ sub startOnlinePassive {
               ' (tcp[tcpflags] & tcp-syn != 0))';
 
    my $dump = Net::Packet::Dump->new(
-      file            => $file,
-      unlinkOnDestroy => 0,
-      overwrite       => 1,
-      timeoutOnNext   => 0,
-      callStart       => 0,
-      noStore         => 1,
+      file                 => $file,
+      $self->_unlinkMethod => 0,
+      overwrite            => 1,
+      timeoutOnNext        => 0,
+      callStart            => 0,
+      noStore              => 1,
    );
+   $self->_dump($dump);
 
    $self->filter ? $dump->filter('('. $self->filter. ') and '. $filter)
                  : $dump->filter($filter);
@@ -285,10 +298,10 @@ sub startOfflinePassive {
 
    $self->_dump(
       Net::Packet::Dump->new(
-         file            => $self->file,
-         overwrite       => 0,
-         unlinkOnDestroy => 0,
-         callStart       => 0,
+         file                 => $self->file,
+         overwrite            => 0,
+         $self->_unlinkMethod => 0,
+         callStart            => 0,
       ),
    );
 
@@ -325,13 +338,14 @@ sub startOnline {
    }
 
    my $dump = Net::Packet::Dump->new(
-      file            => $file,
-      unlinkOnDestroy => $self->keepPcap ? 0 : 1,
-      overwrite       => 1,
-      timeoutOnNext   => $self->wait,
-      callStart       => 0,
+      file                 => $file,
+      $self->_unlinkMethod => $self->keepPcap ? 0 : 1,
+      overwrite            => 1,
+      timeoutOnNext        => $self->wait,
+      callStart            => 0,
    );
-
+   $self->_dump($dump);
+   
    $self->testSyn1Build;
    $self->testSyn2Build;
    $self->testSynABuild;
@@ -372,10 +386,10 @@ sub _startOfflineGetDump {
 
    $self->_dump(
       Net::Packet::Dump->new(
-         file            => $self->file,
-         overwrite       => 0,
-         unlinkOnDestroy => 0,
-         callStart       => 0,
+         file                 => $self->file,
+         overwrite            => 0,
+         $self->_unlinkMethod => 0,
+         callStart            => 0,
       ),
    );
 
@@ -429,9 +443,10 @@ sub _buildSigFinal {
    my $self = shift;
    my ($sig, $first, $opts, $mss) = @_;
 
-   $sig .= 'O'.$opts                      if     $opts;
+   $sig .= 'O';
+   $sig .= $opts                          if     $opts;
    $sig .= unpack('H*', $first->l7->data) if     $first->l7;
-   $sig .= 'O0'                           unless $opts || $first->l7;
+   $sig .= '0'                            unless $opts || $first->l7;
    $sig .= " M$mss";
 
    $sig;
@@ -667,9 +682,19 @@ sub printResultsOnlyOs {
    print "$osfp: unknown\n" unless $self->found;
 }
 
-sub DESTROY {
+sub _signalClean {
    my $self = shift;
-   $self->_dump->stop if $self->_dump && $self->_dump->isRunning;
+   $self->clean;
+   exit(0);
+}
+
+sub clean {
+   my $self = shift;
+   if ($self->_dump && $self->_dump->isRunning) {
+      $self->_dump->stop;
+      # Forward compatibility patch with Net::Packet 3.00
+      $self->_dump->clean if $self->_dump->can('clean');
+   }
    $self->_db->close  if $self->_db;
    return(0);
 }

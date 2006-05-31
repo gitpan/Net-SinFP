@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SinFP.
 
+1.02 Wed May 31 18:50:03 CEST 2006
+   - bugfix: in RST response to a probe when it has some L7 data
+   - compatibility patches with upcoming Net::Packet 3.00
+
 1.01 Sat May 13 13:03:16 CEST 2006
    - sinfp.db: new signatures, bugfix on some
    - sinfp.db: now installs in the same directory as sinfp.pl, no need to 

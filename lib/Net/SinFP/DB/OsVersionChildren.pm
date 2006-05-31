@@ -1,5 +1,5 @@
 #
-# $Id: OsVersionChildren.pm,v 1.1.2.4.2.1 2006/05/13 10:57:50 gomor Exp $
+# $Id: OsVersionChildren.pm,v 1.1.2.4.2.2 2006/05/31 16:49:57 gomor Exp $
 #
 package Net::SinFP::DB::OsVersionChildren;
 use strict;
@@ -21,7 +21,7 @@ Net::SinFP::DB::OsVersionChildren - OsVersionChildren SQL table
 
 =head1 DESCRIPTION
 
-Go to http://www.gomor.org/ to know more.
+Go to http://www.gomor.org/sinfp to know more.
 
 =cut
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# $Id: sinfp.pl,v 1.1.2.11.2.1 2006/05/13 10:52:58 gomor Exp $
+# $Id: sinfp.pl,v 1.1.2.11.2.2 2006/05/31 16:47:23 gomor Exp $
 #
 use strict;
 use warnings;
@@ -44,7 +44,7 @@ if ($opts{s}) {
    $dbFile = $opts{s};
 }
 else {
-   for ("$Bin/../db/", "$Bin/", '/usr/local/share/sinfp/') {
+   for ("$Bin/../db/", "$Bin/") {
       $dbFile = $_.'sinfp.db';
       last if -f $dbFile;
    }
@@ -115,5 +115,7 @@ else {
       ? $sinfp->startOfflinePassive
       : $sinfp->startOnlinePassive;
 }
+
+$sinfp->clean;
 
 exit(0);
