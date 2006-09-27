@@ -1,423 +1,437 @@
 #
-# $Id: SinFP.pm,v 1.8.2.29.2.4 2006/05/31 16:49:22 gomor Exp $
+# $Id: SinFP.pm,v 1.8.2.33.2.36 2006/08/15 13:36:41 gomor Exp $
 #
 package Net::SinFP;
 use strict;
 use warnings;
 
-our $VERSION = '1.02';
+our $VERSION = '2.02';
 
-require Exporter;
 require Class::Gomor::Array;
-our @ISA = qw(Exporter Class::Gomor::Array);
-
-our @EXPORT_OK = qw(
-   MATCH_ALGORITHM_FULL
-   MATCH_ALGORITHM_TWO
-   MATCH_ALGORITHM_ONE
-   SIGNATURE_TYPE_EXACT
-   SIGNATURE_TYPE_HEURISTIC1
-   SIGNATURE_TYPE_HEURISTIC2
-);
-
-use constant MATCH_ALGORITHM_FULL      => 'FULL';
-use constant MATCH_ALGORITHM_TWO       => 'FIREWALLED';
-use constant MATCH_ALGORITHM_ONE       => 'ONE PACKET';
-use constant SIGNATURE_TYPE_EXACT      => 'EXACT';
-use constant SIGNATURE_TYPE_HEURISTIC1 => 'HEURISTIC1';
-use constant SIGNATURE_TYPE_HEURISTIC2 => 'HEURISTIC2';
+our @ISA = qw(Class::Gomor::Array);
 
 our @AS = qw(
+   verbose
    target
-   port
-   mac
-   found
    file
    wait
    retry
    h2Match
+   ipv6UseIpv4
    offline
    passive
+   passiveFrame
    filter
-   testSyn1Pkt
-   testSyn2Pkt
-   testSynAPkt
-   testSyn1Sig
-   testSyn2Sig
-   testSynASig
-   dbFile
-   keepPcap
+   doP1
+   doP2
+   doP3
+   pktP1
+   pktP2
+   pktP3
+   sigP1
+   sigP2
+   sigP3
+   ipv6
+   keepFile
+   db
    _dump
-   _db
-   _tPatternBinary
-   _tPatternTcpFlags
-   _tPatternTcpWindow
-   _tPatternTcpOptions
-   _tPatternTcpMss
-   _tSystemClass
-   _tVendor
-   _tOs
-   _tOsVersion
-   _tOsVersionChildren
-
-   _unlinkMethod
+   _pIpId
+   _pTcpSrc
+   _pTcpSeq
+   _pTcpAck
 );
 our @AA = qw(
-   osfps
-   _signatures
+   resultList
+);
+our @AO = qw(
+   passiveMatchCallback
 );
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 __PACKAGE__->cgBuildAccessorsArray(\@AA);
 
-use Net::Pkt;
-require DBIx::SQLite::Simple;
-require Net::SinFP::DB::Signature;
-require Net::SinFP::DB::IpVersion;
-require Net::SinFP::DB::PatternBinary;
-require Net::SinFP::DB::PatternTcpFlags;
-require Net::SinFP::DB::PatternTcpWindow;
-require Net::SinFP::DB::PatternTcpOptions;
-require Net::SinFP::DB::PatternTcpMss;
-require Net::SinFP::DB::SystemClass;
-require Net::SinFP::DB::Vendor;
-require Net::SinFP::DB::Os;
-require Net::SinFP::DB::OsVersion;
-require Net::SinFP::DB::OsVersionChildren;
+use Carp;
+use Net::Packet::Env qw($Env);
+require Net::Packet::Dump;
+use Net::Packet::Consts qw(:tcp :dump);
+use Net::Packet::Utils qw(getRandom16bitsInt getRandom32bitsInt);
+require Net::SinFP::SinFP4;
+require Net::SinFP::SinFP6;
+require Net::SinFP::Search;
 
-=head1 NAME
-
-Net::SinFP - a full operating system stack fingerprinting suite
-
-=head1 DESCRIPTION
-
-Go to http://www.gomor.org/sinfp to know more.
-
-=cut
+sub passiveMatchCallback {
+   my $self = shift;
+   @_ ? $self->[$Net::SinFP::__passiveMatchCallback] = shift
+      : &{$self->[$Net::SinFP::__passiveMatchCallback]}();
+}
 
 sub new {
    my $self = shift->SUPER::new(
-      offline  => 0,
-      wait     => 3,
-      retry    => 3,
-      found    => 0,
-      passive  => 0,
-      h2Match  => 0,
-      osfps    => [],
-      keepPcap => 0,
-      _db      => 0,
+      verbose     => 0,
+      doP1        => 1,
+      doP2        => 1,
+      doP3        => 1,
+      wait        => 3,
+      retry       => 3,
+      h2Match     => 0,
+      keepFile    => 0,
+      offline     => 0,
+      passive     => 0,
+      ipv6        => 0,
+      ipv6UseIpv4 => 0,
+      resultList  => [],
       @_,
    );
 
-   if (! $self->dbFile
-   ||  ! $self->_db(DBIx::SQLite::Simple->new(db => $self->dbFile))) {
-      die("Can't open db: ".$self->dbFile."\n");
+   if (! $self->db) {
+      confess("You MUST specify an open SinFP DB in `db' attribute\n");
    }
 
-   # Forward compatibility patch with Net::Packet 3.00
-   my $unlinkMethod = Net::Packet::Dump->can('unlinkOnDestroy')
-      ? 'unlinkOnDestroy'
-      : 'unlinkOnClean';
-   $self->_unlinkMethod($unlinkMethod);
+   $self->_pIpId  ($self->_getInitialIpId);
+   $self->_pTcpSrc($self->_getInitialTcpSrc);
+   $self->_pTcpSeq($self->_getInitialTcpSeq);
+   $self->_pTcpAck($self->_getInitialTcpAck);
 
    $SIG{INT}  = sub { $self->_signalClean };
    $SIG{TERM} = sub { $self->_signalClean };
 
-   $self->_loadSignatures;
-
-   $self;
+   $self->ipv6 ? bless($self, 'Net::SinFP::SinFP6')
+               : bless($self, 'Net::SinFP::SinFP4');
 }
 
-sub _lookupOsInfos {
+sub _getInitialIpId {
+   my $ipId = getRandom16bitsInt();
+   $ipId += 666 unless $ipId > 0;
+   $ipId;
+}
+
+sub _getInitialTcpSrc {
+   my $tcpSrc = getRandom16bitsInt() - 3;
+   $tcpSrc += 1025 unless $tcpSrc > 1024;
+   $tcpSrc;
+}
+
+sub _getInitialTcpSeq {
+   my $tcpSeq = getRandom32bitsInt() - 3;
+   $tcpSeq += 666 unless $tcpSeq > 0;
+   $tcpSeq;
+}
+
+sub _getInitialTcpAck {
+   my $tcpAck = getRandom32bitsInt() - 3;
+   $tcpAck += 666 unless $tcpAck > 0;
+   $tcpAck;
+}
+
+sub getFilter {
    my $self = shift;
-   my $s = shift;
+   $self->passive ? $self->_getFilterPassive : $self->_getFilterActive;
+}
 
-   # Lookup values
-   $s->systemClass($self->_tSystemClass->getSystemClass($s->idSystemClass));
-   $s->vendor($self->_tVendor->getVendor($s->idVendor));
-   $s->os($self->_tOs->getOs($s->idOs));
-   $s->osVersion($self->_tOsVersion->getOsVersion($s->idOsVersion));
+sub getFileName {
+   my $self = shift;
+   $self->passive ? $self->_getFileNamePassive : $self->_getFileNameActive;
+}
 
-   my $osVersionChildren = $self->_tOsVersionChildren->select(
-      idSignature => $s->idSignature,
+sub _getDumpOnlineActive {
+   my $self = shift;
+   Net::Packet::Dump->new(
+      file          => $self->file,
+      unlinkOnClean => $self->keepFile ? 0 : 1,
+      overwrite     => 1,
+      timeoutOnNext => $self->wait,
    );
+}
 
-   if (@$osVersionChildren) {
-      my @osVersion;
-      push @osVersion, $self->_tOsVersion->getOsVersion($_->idOsVersion)
-         for @$osVersionChildren;
-      $s->osVersionChildren(\@osVersion);
+sub _getDumpOnlinePassive {
+   my $self = shift;
+   Net::Packet::Dump->new(
+      file          => $self->file,
+      unlinkOnClean => 0,
+      overwrite     => 1,
+      timeoutOnNext => 0,
+      noStore       => 1,
+   );
+}
+
+sub _getDumpOffline {
+   my $self = shift;
+   Net::Packet::Dump->new(
+      file          => $self->file,
+      overwrite     => 0,
+      unlinkOnClean => 0,
+      mode          => NP_DUMP_MODE_OFFLINE,
+   );
+}
+
+sub getDump {
+   my $self = shift;
+   my $dump;
+   if ($self->offline) {
+      $dump = $self->_getDumpOffline;
    }
    else {
-      $s->osVersionChildren([]);
+      $self->passive ? do { $dump = $self->_getDumpOnlinePassive }
+                     : do { $dump = $self->_getDumpOnlineActive  };
    }
+   $dump;
 }
 
-sub _lookupPatterns {
-   my $self = shift;
-   my $s = shift;
-
-   for my $t ('1', '2', '3') {
-      for my $m ('PatternBinary', 'PatternTcpFlags', 'PatternTcpWindow', 
-                 'PatternTcpOptions', 'PatternTcpMss') {
-         my $table = '_t'.$m;
-         my $g = $m;
-         $g =~ s/^Pattern/get/;
-         my $m1   = 't'.$t.$m;
-         my $m2   = $g;
-         my $m3   = 'idT'.$t.$m;
-         my $m1h1 = 't'.$t.$m.'H1';
-         my $m2h1 = $g.'H1';
-         my $m1h2 = 't'.$t.$m.'H2';
-         my $m2h2 = $g.'H2';
-         $s->$m1  ($self->$table->$m2  ($s->$m3));
-         $s->$m1h1($self->$table->$m2h1($s->$m3));
-         $s->$m1h2($self->$table->$m2h2($s->$m3));
-      }
-   }
-}
-
-sub _loadSignatures {
-   my $self = shift;
-
-   # Tables only used locally
-   my $tSignature = Net::SinFP::DB::Signature->new;
-   my $tIpVersion = Net::SinFP::DB::IpVersion->new;
-
-   # Tables used in other methods
-   $self->_tPatternBinary    (Net::SinFP::DB::PatternBinary->new);
-   $self->_tPatternTcpFlags  (Net::SinFP::DB::PatternTcpFlags->new);
-   $self->_tPatternTcpWindow (Net::SinFP::DB::PatternTcpWindow->new);
-   $self->_tPatternTcpOptions(Net::SinFP::DB::PatternTcpOptions->new);
-   $self->_tPatternTcpMss    (Net::SinFP::DB::PatternTcpMss->new);
-
-   $self->_tSystemClass      (Net::SinFP::DB::SystemClass->new);
-   $self->_tVendor           (Net::SinFP::DB::Vendor->new);
-   $self->_tOs               (Net::SinFP::DB::Os->new);
-   $self->_tOsVersion        (Net::SinFP::DB::OsVersion->new);
-   $self->_tOsVersionChildren(Net::SinFP::DB::OsVersionChildren->new);
-
-   my $idIpVersion;
-   my ($class) = ref($self) =~ /^(?:.*::)?(.*)/;
-
-   ($class eq 'SinFP4')
-      ? ($idIpVersion = $tIpVersion->getIdIpVersion('IPv4'))
-      : ($idIpVersion = $tIpVersion->getIdIpVersion('IPv6'));
-   my $signatures = $tSignature->select(idIpVersion => $idIpVersion);
-   die("Unable to load signatures from sinfp.db.\n".
-       "Try installing latest DBD::SQLite module.\n")
-      unless scalar @$signatures;
-
-   $self->_lookupPatterns($_) for @$signatures;
-
-   $self->_signatures($signatures);
-}
-
-sub _printPassive {
+sub _passiveMatchPrepare {
    my $self = shift;
    my ($frame) = @_;
-
-   print $frame->l3->src. ':'. $frame->l4->src. ' > '.
-         $frame->l3->dst. ':'. $frame->l4->dst;
-
-   $frame->l4->haveFlagAck ? print " [SYN|ACK]\n"
-                           : print " [SYN]\n";
-
-   # Do not try to match if there is not enough options
-   if ($frame->l4->getOptionsLength <= 4) {
-      print "Not enough TCP options, skipping\n\n";
-      return undef;
-   }
-
-   # Rewrite TCP flags to be SinFP DB compliant
-   $frame->l4->flags(NP_TCP_FLAG_SYN|NP_TCP_FLAG_ACK);
-   $frame->l4->pack;
-
-   $self->testSyn2Pkt($frame);
-   $self->testSyn2Pkt->reply($frame);
-
-   $self->testSyn2Sig($self->_buildSig($frame, undef));
-
-   $self->matchOsfps;
-   $self->printResults;
-   print "\n";
-
-   # Reset for next tries
-   $self->found(0);
-   $self->osfps([]);
-
-   1;
+   $self->pktP1(undef);
+   $self->pktP3(undef);
+   $self->passiveFrame($frame);
+   $self->pktP2($frame);
+   $self->pktP2->reply($frame);
 }
 
-sub startOnlinePassive {
+sub _passiveMatchClean {
+   my $self = shift;
+   $self->passiveFrame(undef);
+   $self->pktP2->reply(undef);
+   $self->pktP2(undef);
+   $self->resultList([]);
+}
+
+sub _startOnlinePassive {
    my $self = shift;
 
-   my ($class) = ref($self) =~ /^(?:.*::)?(.*)/;
+   $self->file($self->getFileName);
+   $self->_dump($self->getDump);
 
-   my $file;
-   my $filter;
-   if ($class eq 'SinFP6') {
-      $file   = 'sinfp6-passive.pcap';
-      $filter = '(ip6 and tcp and ';
-   }
-   else {
-      $file   = 'sinfp4-passive.pcap';
-      $filter = '(ip and tcp and ';
-   }
-   $filter .= '((tcp[tcpflags] & tcp-syn != 0) and'.
-              ' (tcp[tcpflags] & tcp-ack != 0)) or'.
-              ' (tcp[tcpflags] & tcp-syn != 0))';
+   my $filter = $self->getFilter;
+   $self->filter ? $self->_dump->filter('('.$self->filter.') and '.$filter)
+                 : $self->_dump->filter($filter);
 
-   my $dump = Net::Packet::Dump->new(
-      file                 => $file,
-      $self->_unlinkMethod => 0,
-      overwrite            => 1,
-      timeoutOnNext        => 0,
-      callStart            => 0,
-      noStore              => 1,
-   );
-   $self->_dump($dump);
-
-   $self->filter ? $dump->filter('('. $self->filter. ') and '. $filter)
-                 : $dump->filter($filter);
-
-   $dump->start;
-
-   $self->testSyn1Pkt(undef);
-   $self->testSynAPkt(undef);
+   $self->_dump->start;
 
    while (1) {
-      if (my $frame = $dump->next) {
-         $self->_printPassive($frame);
+      if (my $frame = $self->_dump->next) {
+         $self->_passiveMatchPrepare($frame);
+         $self->passiveMatchCallback;
+         $self->_passiveMatchClean;
       }
    }
 }
 
-sub startOfflinePassive {
+sub _startOfflinePassive {
    my $self = shift;
 
-   $self->_dump(
-      Net::Packet::Dump->new(
-         file                 => $self->file,
-         overwrite            => 0,
-         $self->_unlinkMethod => 0,
-         callStart            => 0,
-      ),
-   );
+   $self->_dump($self->getDump);
 
+   $self->_dump->start;
    $self->_dump->nextAll;
-   die("No frames captured\n") unless ($self->_dump->frames)[0];
-
-   $self->testSyn1Pkt(undef);
-   $self->testSynAPkt(undef);
+   croak("No frames captured\n") unless ($self->_dump->frames)[0];
 
    for my $frame ($self->_dump->frames) {
       if ($frame->l4->isTcp) {
          if ($frame->l4->flags == (NP_TCP_FLAG_SYN)
          ||  $frame->l4->flags == (NP_TCP_FLAG_SYN|NP_TCP_FLAG_ACK) ) {
-            $self->_printPassive($frame);
+            $self->_passiveMatchPrepare($frame);
+            $self->passiveMatchCallback;
+            $self->_passiveMatchClean;
          }
       }
    }
+
+   $self->clean;
+   exit(0);
 }
 
-sub startOnline {
+sub _startOfflineActive {
    my $self = shift;
 
-   my ($class) = ref($self) =~ /^(?:.*::)?(.*)/;
+   $self->_dump($self->getDump);
+   $self->_dump->start;
+   $self->_dump->nextAll;
+   croak("No frames captured\n") unless ($self->_dump->frames)[0];
 
-   my $file;
-   my $filter;
-   if ($class eq 'SinFP6') {
-      $file   = 'sinfp6-'. $self->target. '.'. $self->port. '.pcap';
-      $filter = '(ip6 and host '. $self->target. ' and host '. $Env->ip6. ')';
+   my $targetIp = ($self->_dump->frames)[0]->l3->dst;
+
+   $self->getOfflineProbes($targetIp);
+   croak("No SinFP probe found\n") if (! $self->pktP1 && ! $self->pktP2
+                                                      && ! $self->pktP3);
+   $self->getResponses;
+}
+
+sub _startOnlineActive {
+   my $self = shift;
+
+   $self->file($self->getFileName);
+   $self->_dump($self->getDump);
+
+   $self->buildProbes;
+
+   my $filter = $self->getFilter;
+   $filter .= ' and tcp and port '.$self->target->port.
+              ' and (';
+   my $putOr;
+   if ($self->pktP1) {
+      $filter .= 'port '.$self->pktP1->l4->src;
+      $putOr++;
    }
-   else {
-      $file   = 'sinfp4-'. $self->target. '.'. $self->port. '.pcap';
-      $filter = 'host '. $self->target. ' and host '. $Env->ip;
+   if ($self->pktP2) {
+      $filter .= ' or ' if $putOr;
+      $filter .= 'port '.$self->pktP2->l4->src;
+      $putOr++;
    }
+   if ($self->pktP3) {
+      $filter .= ' or ' if $putOr;
+      $filter .= 'port '.$self->pktP3->l4->src;
+      $putOr++;
+   }
+   $filter .= ')';
+   $self->_dump->filter($filter);
 
-   my $dump = Net::Packet::Dump->new(
-      file                 => $file,
-      $self->_unlinkMethod => $self->keepPcap ? 0 : 1,
-      overwrite            => 1,
-      timeoutOnNext        => $self->wait,
-      callStart            => 0,
-   );
-   $self->_dump($dump);
-   
-   $self->testSyn1Build;
-   $self->testSyn2Build;
-   $self->testSynABuild;
-
-   $filter .= ' and tcp and port '. $self->port.
-              ' and '.
-              '(   port '. $self->testSyn1Pkt->l4->src.
-              ' or port '. $self->testSyn2Pkt->l4->src.
-              ' or port '. $self->testSynAPkt->l4->src.
-              ')';
-   $dump->filter($filter);
-
-   $dump->start;
+   $self->_dump->start;
 
    for (1..$self->retry) {
-      $self->testSyn1Pkt->send unless $self->testSyn1Pkt->reply;
-      $self->testSyn2Pkt->send unless $self->testSyn2Pkt->reply;
-      $self->testSynAPkt->send unless $self->testSynAPkt->reply;
+      $self->sendProbes;
 
-      until ($Env->dump->timeout) {
-         if ($dump->next) {
-            $self->testSyn1Pkt->recv;
-            $self->testSyn2Pkt->recv;
-            $self->testSynAPkt->recv;
+      until ($self->_dump->timeout) {
+         if ($self->_dump->next) {
+            $self->getResponses;
          }
 
-         return if $self->testSyn1Pkt->reply
-                && $self->testSyn2Pkt->reply
-                && $self->testSynAPkt->reply;
+         return if $self->allResponsesReceived;
       }
 
-      $Env->dump->timeout(0);
+      $self->_dump->timeoutReset;
    }
 }
 
-sub _startOfflineGetDump {
+sub start {
    my $self = shift;
 
-   $self->_dump(
-      Net::Packet::Dump->new(
-         file                 => $self->file,
-         overwrite            => 0,
-         $self->_unlinkMethod => 0,
-         callStart            => 0,
-      ),
-   );
-
-   $self->_dump->nextAll;
-
-   die("No frames captured\n") unless ($self->_dump->frames)[0];
-   ($self->_dump->frames)[0]->l3->dst;
+   if ($self->passive) {
+      $self->doP1(0);
+      $self->doP2(1);
+      $self->doP3(0);
+      $self->offline ? $self->_startOfflinePassive : $self->_startOnlinePassive;
+   }
+   else {
+      $self->offline ? $self->_startOfflineActive : $self->_startOnlineActive;
+   }
 }
 
-sub _startOfflineGetResponses {
+sub buildProbes {
    my $self = shift;
-
-   $self->testSyn1Pkt->recv if $self->testSyn1Pkt;
-   $self->testSyn2Pkt->recv if $self->testSyn2Pkt;
-   $self->testSynAPkt->recv if $self->testSynAPkt;
+   $self->pktP1($self->getP1) if $self->doP1;
+   $self->pktP2($self->getP2) if $self->doP2;
+   $self->pktP3($self->getP3) if $self->doP3;
 }
 
-sub _buildSigFromOptions {
+sub sendProbes {
    my $self = shift;
-   my ($first, $second) = @_;
-   my $sig = 'B00000 F0 W0 O0 M0';
+   $self->pktP1->send if ($self->pktP1 && ! $self->pktP1->reply);
+   $self->pktP2->send if ($self->pktP2 && ! $self->pktP2->reply);
+   $self->pktP3->send if ($self->pktP3 && ! $self->pktP3->reply);
+}
 
-   return $sig unless $first;
+sub getResponses {
+   my $self = shift;
+   $self->pktP1->recv if ($self->pktP1 && ! $self->pktP1->reply);
+   $self->pktP2->recv if ($self->pktP2 && ! $self->pktP2->reply);
+   $self->pktP3->recv if ($self->pktP3 && ! $self->pktP3->reply);
+}
 
+# This is to verify that RST packets are generated from the target with 
+# the same TTL as a SYN|ACK packet. We accept a difference of 3 hops, but 
+# if this is greater, we consider to not be the same generated TTL
+# Example: SunOS 5.9 generates a TTL of 60 in a SYN|ACK from our probe,
+#          but a TTL of 64 for a RST from our probe. So, $ttl = 0.
+sub __analyzeIpTtl {
+   my $self = shift;
+   my ($p, $p2) = @_;
+   return 1 if ! $p2 || ! $p2->reply;
+   my $ttlSrc = $self->getResponseIpTtl($p2);
+   my $ttlDst = $self->getResponseIpTtl($p);
+   my $ttl = 1;
+   $ttl = 0 if (($ttlSrc > $ttlDst) && ($ttlSrc - $ttlDst > 3));
+   $ttl = 0 if (($ttlDst > $ttlSrc) && ($ttlDst - $ttlSrc > 3));
+   $ttl;
+}
+
+sub __analyzeIpDfBit { shift->getResponseIpDfBit(shift()) ? '1' : '0' }
+
+sub __analyzeIpIdPassive { shift->getResponseIpId(shift()) ? '1' : '0' }
+
+sub __analyzeIpId {
+   my $self = shift;
+   my ($p) = @_;
+   return $self->__analyzeIpIdPassive($p) if $self->passive;
+   my $reqId = $self->getProbeIpId($p);
+   my $repId = $self->getResponseIpId($p);
+   my $flag  = 1;
+   if    ($repId == 0)        { $flag = 0 }
+   elsif ($repId == $reqId)   { $flag = 2 }
+   elsif ($repId == ++$reqId) { $flag = 3 } # There is no reason for that, but
+                                            # anyway, we have nothing to loose
+   $flag;
+}
+
+sub __analyzeTcpSeqPassive { shift; shift->reply->l4->seq ? '1' : '0' }
+
+sub __analyzeTcpSeq {
+   my $self = shift;
+   my ($p) = @_;
+   return $self->__analyzeTcpSeqPassive($p) if $self->passive;
+   my $reqAck = $p->l4->ack;
+   my $repSeq = $p->reply->l4->seq;
+   my $flag   = 1;
+   if    ($repSeq == 0        ) { $flag = 0 }
+   elsif ($repSeq == $reqAck  ) { $flag = 2 }
+   elsif ($repSeq == ++$reqAck) { $flag = 3 }
+   $flag;
+}
+
+sub __analyzeTcpAckPassive { shift; shift->reply->l4->ack ? '1' : '0' }
+
+sub __analyzeTcpAck {
+   my $self = shift;
+   my ($p) = @_;
+   return $self->__analyzeTcpAckPassive($p) if $self->passive;
+   my $reqSeq = $p->l4->seq;
+   my $repAck = $p->reply->l4->ack;
+   my $flag   = 1;
+   if    ($repAck == 0        ) { $flag = 0 }
+   elsif ($repAck == $reqSeq  ) { $flag = 2 }
+   elsif ($repAck == ++$reqSeq) { $flag = 3 }
+   $flag;
+}
+
+sub _analyzeBinary {
+   my $self = shift;
+   my ($p, $p2) = @_;
+   my $flagTtl = $self->__analyzeIpTtl($p, $p2);
+   my $flagId  = $self->__analyzeIpId($p);
+   my $flagDf  = $self->__analyzeIpDfBit($p);
+   my $flagSeq = $self->__analyzeTcpSeq($p);
+   my $flagAck = $self->__analyzeTcpAck($p);
+   'B'.$flagTtl.$flagId.$flagDf.$flagSeq.$flagAck;
+}
+
+sub _analyzeTcpFlags {
+   my $self = shift;
+   my ($p) = @_;
+   sprintf("F0x%02x", $p->reply->l4->flags);
+}
+
+sub _analyzeTcpWindow {
+   my $self = shift;
+   my ($p) = @_;
+   'W'.$p->reply->l4->win;
+}
+
+sub _analyzeTcpOptionsAndMss {
+   my $self = shift;
+   my ($p) = @_;
    # Rewrite timestamp values, if > 0 overwrite with ffff, for each timestamp
-   my $mss = 0;
+   my $mss;
    my $opts;
-   if ($opts = unpack('H*', $first->l4->options)) {
+   if ($opts = unpack('H*', $p->reply->l4->options)) {
       if ($opts =~ /080a(........)(........)/) {
          if ($1 && $1 !~ /44454144|00000000/) {
             $opts =~ s/(080a)........(........)/$1ffffffff$2/;
@@ -434,252 +448,133 @@ sub _buildSigFromOptions {
          }
       }
    }
-   $opts = 0 unless $opts;
+   $opts .= unpack('H*', $p->reply->l7->data) if $p->reply->l7;
 
-   ( $sig, $opts, $mss );
+   $opts = '0' unless $opts;
+   $mss  = '0' unless $mss;
+   [ 'O'.$opts, 'M'.$mss ];
 }
 
-sub _buildSigFinal {
+sub getResponseSignature {
    my $self = shift;
-   my ($sig, $first, $opts, $mss) = @_;
-
-   $sig .= 'O';
-   $sig .= $opts                          if     $opts;
-   $sig .= unpack('H*', $first->l7->data) if     $first->l7;
-   $sig .= '0'                            unless $opts || $first->l7;
-   $sig .= " M$mss";
-
-   $sig;
+   my ($p, $p2) = @_;
+   return { B => 'B00000', F => 'F0', W => 'W0', O => 'O0', M => 'M0' }
+      if (! $p || ! $p->reply);
+   my $b  = $self->_analyzeBinary($p, $p2);
+   my $f  = $self->_analyzeTcpFlags($p);
+   my $w  = $self->_analyzeTcpWindow($p);
+   my $om = $self->_analyzeTcpOptionsAndMss($p);
+   my $o = $om->[0];
+   my $m = $om->[1];
+   { B => $b, F => $f, W => $w, O => $o, M => $m };
 }
 
-sub analyzeReponses {
+sub _passiveMatchUpdate {
    my $self = shift;
-
-   $self->testSyn1Sig($self->_buildSig($self->testSyn1Pkt->reply, undef))
-      if $self->testSyn1Pkt;
-   $self->testSyn2Sig($self->_buildSig($self->testSyn2Pkt->reply, undef))
-      if $self->testSyn2Pkt;
-   $self->testSynASig(
-      $self->_buildSig(
-         $self->testSynAPkt->reply,
-         $self->testSyn1Pkt->reply || $self->testSyn2Pkt->reply,
-      ),
-   ) if $self->testSynAPkt;
+   $self->pktP2->reply->l4->flags(NP_TCP_FLAG_SYN|NP_TCP_FLAG_ACK);
+   $self->pktP2->reply->l4->pack;
 }
 
-sub _addResult {
+sub analyzeResponses {
    my $self = shift;
-   my ($result) = @_;
 
-   my @new = $self->osfps;
-   push @new, $result;
+   # Rewrite TCP flags to be SinFP DB compliant
+   $self->_passiveMatchUpdate if $self->passive;
 
-   $self->osfps(\@new);
+   $self->sigP1($self->getResponseSignature($self->pktP1))
+      if $self->doP1;
+   $self->sigP2($self->getResponseSignature($self->pktP2))
+      if $self->doP2;
+   $self->sigP3($self->getResponseSignature($self->pktP3, $self->pktP2))
+      if $self->doP3;
+
+   # Some systems do not respond to P1, but do for P2
+   # We write a fake P1 response to be able to match
+   if ($self->pktP2 && $self->pktP2->reply
+   &&  $self->pktP1 && ! $self->pktP1->reply) {
+      $self->pktP1->reply($self->pktP1->cgClone);
+      $self->sigP1({B => 'B00000', F => 'F0', W => 'W0', O => 'O0', M => 'M0'});
+   }
 }
 
-sub _matchSig {
+sub allResponsesReceived {
    my $self = shift;
-   my ($type) = @_;
+   if ((! $self->pktP1 || $self->pktP1->reply)
+   &&  (! $self->pktP2 || $self->pktP2->reply)
+   &&  (! $self->pktP3 || $self->pktP3->reply)) {
+      return 1;
+   }
+   return undef;
+}
 
-   my $s1 = $self->testSyn1Sig if $self->testSyn1Pkt
-                               && $self->testSyn1Pkt->reply;
-   my $s2 = $self->testSyn2Sig if $self->testSyn2Pkt
-                               && $self->testSyn2Pkt->reply;
-   my $sA = $self->testSynASig if $self->testSynAPkt
-                               && $self->testSynAPkt->reply;
+sub matchOsfps {
+   my $self = shift;
+   my ($userMaskList) = @_;
 
-   for my $s ($self->_signatures) {
-      my $t1;
-      my $t2;
-      my $t3;
-      if ($type eq SIGNATURE_TYPE_EXACT) {
-         $t1 = $s->t1PatternBinary.' '.$s->t1PatternTcpFlags.' '.
-               $s->t1PatternTcpWindow.' '.$s->t1PatternTcpOptions.' '.
-               $s->t1PatternTcpMss;
-         $t2 = $s->t2PatternBinary.' '.$s->t2PatternTcpFlags.' '.
-               $s->t2PatternTcpWindow.' '.$s->t2PatternTcpOptions.' '.
-               $s->t2PatternTcpMss;
-         $t3 = $s->t3PatternBinary.' '.$s->t3PatternTcpFlags.' '.
-               $s->t3PatternTcpWindow.' '.$s->t3PatternTcpOptions.' '.
-               $s->t3PatternTcpMss;
-         $s->signatureType(SIGNATURE_TYPE_EXACT);
-      }
-      elsif ($type eq SIGNATURE_TYPE_HEURISTIC1) {
-         $t1 = $s->t1PatternBinaryH1.' '.$s->t1PatternTcpFlagsH1.' '.
-               $s->t1PatternTcpWindowH1.' '.$s->t1PatternTcpOptionsH1.' '.
-               $s->t1PatternTcpMssH1;
-         $t2 = $s->t2PatternBinaryH1.' '.$s->t2PatternTcpFlagsH1.' '.
-               $s->t2PatternTcpWindowH1.' '.$s->t2PatternTcpOptionsH1.' '.
-               $s->t2PatternTcpMssH1;
-         $t3 = $s->t3PatternBinaryH1.' '.$s->t3PatternTcpFlagsH1.' '.
-               $s->t3PatternTcpWindowH1.' '.$s->t3PatternTcpOptionsH1.' '.
-               $s->t3PatternTcpMssH1;
-         $s->signatureType(SIGNATURE_TYPE_HEURISTIC1);
-      }
-      elsif ($type eq SIGNATURE_TYPE_HEURISTIC2) {
-         $t1 = $s->t1PatternBinaryH2.' '.$s->t1PatternTcpFlagsH2.' '.
-               $s->t1PatternTcpWindowH2.' '.$s->t1PatternTcpOptionsH2.' '.
-               $s->t1PatternTcpMssH2;
-         $t2 = $s->t2PatternBinaryH2.' '.$s->t2PatternTcpFlagsH2.' '.
-               $s->t2PatternTcpWindowH2.' '.$s->t2PatternTcpOptionsH2.' '.
-               $s->t2PatternTcpMssH2;
-         $t3 = $s->t3PatternBinaryH2.' '.$s->t3PatternTcpFlagsH2.' '.
-               $s->t3PatternTcpWindowH2.' '.$s->t3PatternTcpOptionsH2.' '.
-               $s->t3PatternTcpMssH2;
-         $s->signatureType(SIGNATURE_TYPE_HEURISTIC2);
-      }
+   # Deactivate match only with P2 unless explicitely asked for
+   my $doP2 = $self->doP1 ? 0 : 1;
 
-      # In passive mode, the SYN2 test is not our own, so timestamp is not 
-      # built as we want. We rewrite it to be able to match.
-      if ($self->passive) {
-         $t2 =~ s/44454144/......../;
-      }
+   my $se = Net::SinFP::Search->new(
+      db               => $self->db,
+      useAdvancedMasks => $self->h2Match ? 1 : 0,
+      maskUserList     => $userMaskList ? $userMaskList : [],
+      ipv6             => $self->ipv6 ? 1 : 0,
+      enableP2Match    => $doP2 ? 1 : 0,
+   );
+   $se->sigP1($self->sigP1) if $self->pktP1 && $self->pktP1->reply;
+   $se->sigP2($self->sigP2) if $self->pktP2 && $self->pktP2->reply;
+   $se->sigP3($self->sigP3) if $self->pktP3 && $self->pktP3->reply;
 
-      # Matching is done here
-      if (($s1 && $s1 =~ /^$t1$/)
-      &&  ($s2 && $s2 =~ /^$t2$/)
-      &&  ($sA && $sA =~ /^$t3$/)) {
-         $s->matchAlgorithm(MATCH_ALGORITHM_FULL);
-         $self->_lookupOsInfos($s);
-         $self->_addResult($s);
-         $self->found(1);
-      }
-      elsif (($s1 && $s1 =~ /^$t1$/)
-         &&  ($s2 && $s2 =~ /^$t2$/)) {
-         $s->matchAlgorithm(MATCH_ALGORITHM_TWO); # Firewalled system
-         $self->_lookupOsInfos($s);
-         $self->_addResult($s);
-         $self->found(1);
-      }
-      elsif ($s2 && $s2 =~ /^$t2$/) { # Match only with test 2
-         $s->matchAlgorithm(MATCH_ALGORITHM_ONE);
-         $self->_lookupOsInfos($s);
-         $self->_addResult($s);
-         $self->found(1);
+   if (my $result = $se->search) {
+      $self->resultList($result);
+   }
+
+   if ($self->ipv6 && $self->ipv6UseIpv4 && ! $self->found) {
+      my $se2 = Net::SinFP::Search->new(
+         db               => $self->db,
+         useAdvancedMasks => $self->h2Match ? 1 : 0,
+         maskUserList     => $userMaskList ? $userMaskList : [],
+         ipv6             => 0,
+         enableP2Match    => $doP2 ? 1 : 0,
+      );
+      $se2->sigP1($self->sigP1) if $self->pktP1 && $self->pktP1->reply;
+      $se2->sigP2($self->sigP2) if $self->pktP2 && $self->pktP2->reply;
+      $se2->sigP3($self->sigP3) if $self->pktP3 && $self->pktP3->reply;
+
+      # We reload with IPv4 signatures
+      $se->db->ipv6(0);
+      $se->db->loadSignatures;
+
+      if (my $result = $se2->search) {
+         $self->resultList($result);
       }
    }
 
    $self->found;
 }
 
-sub _cleanFound {
-   my $self = shift;
+sub found { scalar shift->resultList }
 
-   my $betterAlgo = MATCH_ALGORITHM_ONE;
-   for ($self->osfps) {
-      if ($_->matchAlgorithm eq MATCH_ALGORITHM_FULL) {
-         $betterAlgo = MATCH_ALGORITHM_FULL;
-         last;
-      }
-      elsif ($_->matchAlgorithm eq MATCH_ALGORITHM_TWO) {
-         $betterAlgo = MATCH_ALGORITHM_TWO;
-      }
+sub _sigPAsString {
+   my $self = shift;
+   my ($p) = @_;
+   my $sig = $self->$p;
+   return 'B00000 F0 W0 O0 M0' unless $sig;
+   join(' ', $sig->{B}, $sig->{F}, $sig->{W}, $sig->{O}, $sig->{M});
+}
+sub sigP1AsString { shift->_sigPAsString('sigP1') }
+sub sigP2AsString { shift->_sigPAsString('sigP2') }
+sub sigP3AsString { shift->_sigPAsString('sigP3') }
+
+sub clean {
+   my $self = shift;
+   if ($self->_dump) {
+      $self->_dump->stop;
+      $self->_dump->clean;
+      $self->_dump(undef);
+      $Env->dump(undef);
    }
-
-   my $h = {
-      MATCH_ALGORITHM_FULL() => 3,
-      MATCH_ALGORITHM_TWO()  => 2,
-      MATCH_ALGORITHM_ONE()  => 1,
-   };
-
-   my @keep = ();
-   for ($self->osfps) {
-      if ($h->{$_->matchAlgorithm} >= $h->{$betterAlgo}) {
-         push @keep, $_;
-      }
-   }
-   $self->osfps(\@keep);
-   $self->found(scalar @keep);
-}
-
-sub matchSigExact      { shift->_matchSig(SIGNATURE_TYPE_EXACT)      }
-sub matchSigHeuristic1 { shift->_matchSig(SIGNATURE_TYPE_HEURISTIC1) }
-sub matchSigHeuristic2 { shift->_matchSig(SIGNATURE_TYPE_HEURISTIC2) }
-
-sub matchOsfps {
-   my $self = shift;
-
-   for (1..2) {
-      $self->matchSigExact;
-      $self->matchSigHeuristic1 if ! $self->found;
-      $self->matchSigHeuristic2 if ! $self->found && $self->h2Match;
-
-      last if $self->testSynAPkt && ! $self->testSynAPkt->reply
-           || $self->found;
-
-      # Remove testSynA (potentially firewall crafted), and retry
-      $self->testSynAPkt && $self->testSynAPkt->reply(undef);
-   }
-
-   # Keep only better MATCH_ALGORITHM from all results found
-   # Otherwise, it is possible to have a FULL match, and a FIREWALLED 
-   # match, and we do not want that.
-   $self->_cleanFound;
-}
-
-sub _getIpVersion {
-   my $self = shift;
-
-   my ($class) = ref($self) =~ /^(?:.*::)?(.*)/;
-
-   my $osfp;
-   $class eq 'SinFP6'
-      ? do { $osfp = 'IPv6' }
-      : do { $osfp = 'IPv4' }
-   ;
-
-   $osfp;
-}
-
-sub _printSignature {
-   my $self = shift;
-
-   print 'T1: ', $self->testSyn1Sig, "\n" if $self->testSyn1Sig;
-   print 'T2: ', $self->testSyn2Sig, "\n" if $self->testSyn2Sig;
-   print 'T3: ', $self->testSynASig, "\n" if $self->testSynASig;
-}
-
-sub printResults {
-   my $self = shift;
-
-   my $osfp = $self->_getIpVersion;
-
-   $self->_printSignature;
-
-   for ($self->osfps) {
-      print
-         "$osfp: ". $_->signatureType. '/'. $_->matchAlgorithm.
-         ': '. $_->systemClass.
-         ': '. $_->vendor.
-         ': '. $_->os.
-         ': '. $_->osVersion
-      ;
-
-      if ($_->osVersionChildren) {
-         my $buf = '';
-         $buf .= $_.', ' for $_->osVersionChildren;
-         $buf =~ s/, $//;
-         print " ($buf)";
-      }
-
-      print "\n";
-   }
-
-   print "$osfp: unknown\n" unless $self->found;
-}
-
-sub printResultsOnlyOs {
-   my $self = shift;
-
-   my $osfp = $self->_getIpVersion;
-
-   $self->_printSignature;
-
-   my %os;
-   do { $os{$_->os} = '' } for $self->osfps;
-   print "$osfp: $_\n" for keys %os;
-
-   print "$osfp: unknown\n" unless $self->found;
+   return(0);
 }
 
 sub _signalClean {
@@ -688,16 +583,17 @@ sub _signalClean {
    exit(0);
 }
 
-sub clean {
-   my $self = shift;
-   if ($self->_dump && $self->_dump->isRunning) {
-      $self->_dump->stop;
-      # Forward compatibility patch with Net::Packet 3.00
-      $self->_dump->clean if $self->_dump->can('clean');
-   }
-   $self->_db->close  if $self->_db;
-   return(0);
-}
+1;
+
+=head1 NAME
+
+Net::SinFP - a full operating system stack fingerprinting suite
+
+=head1 DESCRIPTION
+
+Go to http://www.gomor.org/sinfp to know more.
+
+=cut
 
 =head1 AUTHOR
 
@@ -711,5 +607,3 @@ You may distribute this module under the terms of the Artistic license.
 See LICENSE.Artistic file in the source distribution archive.
 
 =cut
-
-1;

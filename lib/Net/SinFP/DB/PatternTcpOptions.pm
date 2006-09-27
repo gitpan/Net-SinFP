@@ -1,5 +1,5 @@
 #
-# $Id: PatternTcpOptions.pm,v 1.1.2.10.2.2 2006/05/31 16:49:57 gomor Exp $
+# $Id: PatternTcpOptions.pm,v 1.1.2.12.2.3 2006/06/11 17:18:53 gomor Exp $
 #
 package Net::SinFP::DB::PatternTcpOptions;
 use strict;
@@ -10,37 +10,27 @@ our @ISA = qw(DBIx::SQLite::Simple::Table);
 
 our @AS = qw(
    idPatternTcpOptions
-   patternTcpOptions
+   patternTcpOptionsHeuristic0
    patternTcpOptionsHeuristic1
    patternTcpOptionsHeuristic2
 );
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
+our $Id     = $AS[0];
+our @Fields = @AS[1..$#AS];
+
+1;
+
 =head1 NAME
 
-Net::SinFP::DB::PatternTcpOptions - PatternTcpOptions SQL table
+Net::SinFP::DB::PatternTcpOptions - PatternTcpOptions database table
 
 =head1 DESCRIPTION
 
 Go to http://www.gomor.org/sinfp to know more.
 
 =cut
-
-our $Id     = qw(idPatternTcpOptions);
-our @Fields = qw(
-   patternTcpOptions patternTcpOptionsHeuristic1 patternTcpOptionsHeuristic2
-);
-
-sub getTcpOptions {
-   shift->lookupString('patternTcpOptions', idPatternTcpOptions => shift);
-}
-sub getTcpOptionsH1 {
-   shift->lookupString('patternTcpOptionsHeuristic1', idPatternTcpOptions => shift);
-}
-sub getTcpOptionsH2 {
-   shift->lookupString('patternTcpOptionsHeuristic2', idPatternTcpOptions => shift);
-}
 
 =head1 AUTHOR
 
@@ -54,5 +44,3 @@ You may distribute this module under the terms of the Artistic license.
 See LICENSE.Artistic file in the source distribution archive.
 
 =cut
-
-1;

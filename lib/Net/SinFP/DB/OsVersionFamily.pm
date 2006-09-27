@@ -1,7 +1,7 @@
 #
-# $Id: OsVersion.pm,v 1.1.2.13.2.2 2006/06/08 18:55:42 gomor Exp $
+# $Id: OsVersionFamily.pm,v 1.1.2.2 2006/06/08 18:55:42 gomor Exp $
 #
-package Net::SinFP::DB::OsVersion;
+package Net::SinFP::DB::OsVersionFamily;
 use strict;
 use warnings;
 
@@ -9,8 +9,8 @@ require DBIx::SQLite::Simple::Table;
 our @ISA = qw(DBIx::SQLite::Simple::Table);
 
 our @AS = qw(
-   idOsVersion
-   osVersion
+   idOsVersionFamily
+   osVersionFamily
 );
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
@@ -22,7 +22,7 @@ our @Fields = @AS[1..$#AS];
 
 =head1 NAME
 
-Net::SinFP::DB::OsVersion - OsVersion database table
+Net::SinFP::DB::OsVersionFamily - OsVersionFamily database table
 
 =head1 DESCRIPTION
 

@@ -1,5 +1,5 @@
 #
-# $Id: PatternBinary.pm,v 1.1.2.10.2.2 2006/05/31 16:49:57 gomor Exp $
+# $Id: PatternBinary.pm,v 1.1.2.12.2.3 2006/06/11 17:18:53 gomor Exp $
 #
 package Net::SinFP::DB::PatternBinary;
 use strict;
@@ -10,33 +10,27 @@ our @ISA = qw(DBIx::SQLite::Simple::Table);
 
 our @AS = qw(
    idPatternBinary
-   patternBinary
+   patternBinaryHeuristic0
    patternBinaryHeuristic1
    patternBinaryHeuristic2
 );
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
+our $Id     = $AS[0];
+our @Fields = @AS[1..$#AS];
+
+1;
+
 =head1 NAME
 
-Net::SinFP::DB::PatternBinary - PatternBinary SQL table
+Net::SinFP::DB::PatternBinary - PatternBinary database table
 
 =head1 DESCRIPTION
 
 Go to http://www.gomor.org/sinfp to know more.
 
 =cut
-
-our $Id     = qw(idPatternBinary);
-our @Fields = qw(patternBinary patternBinaryHeuristic1 patternBinaryHeuristic2);
-
-sub getBinary { shift->lookupString('patternBinary', idPatternBinary => shift) }
-sub getBinaryH1 {
-   shift->lookupString('patternBinaryHeuristic1', idPatternBinary => shift);
-}
-sub getBinaryH2 {
-   shift->lookupString('patternBinaryHeuristic2', idPatternBinary => shift);
-}
 
 =head1 AUTHOR
 
@@ -50,5 +44,3 @@ You may distribute this module under the terms of the Artistic license.
 See LICENSE.Artistic file in the source distribution archive.
 
 =cut
-
-1;

@@ -1,5 +1,5 @@
 #
-# $Id: OsVersionChildren.pm,v 1.1.2.4.2.2 2006/05/31 16:49:57 gomor Exp $
+# $Id: OsVersionChildren.pm,v 1.1.2.6.2.2 2006/06/08 18:55:42 gomor Exp $
 #
 package Net::SinFP::DB::OsVersionChildren;
 use strict;
@@ -15,17 +15,19 @@ our @AS = qw(
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
+our @Fields = @AS;
+
+1;
+
 =head1 NAME
 
-Net::SinFP::DB::OsVersionChildren - OsVersionChildren SQL table
+Net::SinFP::DB::OsVersionChildren - OsVersionChildren database table
 
 =head1 DESCRIPTION
 
 Go to http://www.gomor.org/sinfp to know more.
 
 =cut
-
-our @Fields = qw(idSignature idOsVersion);
 
 =head1 AUTHOR
 
@@ -39,5 +41,3 @@ You may distribute this module under the terms of the Artistic license.
 See LICENSE.Artistic file in the source distribution archive.
 
 =cut
-
-1;

@@ -1,11 +1,11 @@
 Net::SinFP
 ==========
 
-To know more: http://www.gomor.org/sinfp
+   To know more: http://www.gomor.org/sinfp
 
 INSTALLATION
 
-To install this module type the following:
+   To install this module type the following:
 
    perl Makefile.PL
    make
@@ -14,17 +14,18 @@ To install this module type the following:
 
 DEPENDENCIES
 
-This module requires these other modules and libraries:
+   This module requires these other modules and libraries:
 
-  Perl v5.6.1
-  Class::Gomor
-  Net::Packet
-  DBIx::SQLite::Simple
+   Perl v5.6.1
+   Class::Gomor
+   Net::Packet
+   Net::Packet::Target
+   DBIx::SQLite::Simple
 
 COPYRIGHT AND LICENSE
 
-You may distribute this module under the terms of the Artistic license.
-See LICENSE.Artistic file in the source distribution archive.
+   You may distribute this module under the terms of the Artistic license.
+   See LICENSE.Artistic file in the source distribution archive.
 
-Copyright (c) 2005-2006, Patrice <GomoR> Auffret
+   Copyright (c) 2005-2006, Patrice <GomoR> Auffret
 

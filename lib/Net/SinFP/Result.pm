@@ -1,28 +1,36 @@
 #
-# $Id: OsVersion.pm,v 1.1.2.13.2.2 2006/06/08 18:55:42 gomor Exp $
+# $Id: Result.pm,v 1.1.2.6 2006/06/12 21:30:27 gomor Exp $
 #
-package Net::SinFP::DB::OsVersion;
+package Net::SinFP::Result;
 use strict;
 use warnings;
 
-require DBIx::SQLite::Simple::Table;
-our @ISA = qw(DBIx::SQLite::Simple::Table);
+require Class::Gomor::Array;
+our @ISA = qw(Class::Gomor::Array);
 
 our @AS = qw(
-   idOsVersion
+   idSignature
+   ipVersion
+   systemClass
+   vendor
+   os
    osVersion
+   osVersionFamily
+   matchType
+   matchMask
+);
+our @AA = qw(
+   osVersionChildrenList
 );
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
-
-our $Id     = $AS[0];
-our @Fields = @AS[1..$#AS];
+__PACKAGE__->cgBuildAccessorsArray (\@AA);
 
 1;
 
 =head1 NAME
 
-Net::SinFP::DB::OsVersion - OsVersion database table
+Net::SinFP::Result - contains all information about matched fingerprint
 
 =head1 DESCRIPTION
 

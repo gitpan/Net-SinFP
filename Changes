@@ -1,5 +1,33 @@
 Revision history for Perl extension Net::SinFP.
 
+2.02 Mon Aug 28 19:56:45 CEST 2006
+   - bugfix: when analyzing an anonymized pcap file
+   - bugfix: test options length for P2 reply, not P3 reply
+   - new signatures
+
+2.01 Sun Jul  2 11:52:43 CEST 2006
+   - bugfix: when a target responds to P2, but to not P1, we craft 
+             a fake P1 reply
+   - update: display a warning when a signature is matched in a heuristic mode, 
+             but not enough TCP options were received from P2 for a considered 
+             reliable match
+   - new signatures
+
+2.00 Wed Jun 14 23:33:16 CEST 2006
+   - complete rewrite
+   - sinfp.db completely reworked
+   - new tests based on comparison between probe and response (TCP seq/ack 
+     comparison, IP ID value comparison)
+   - new matching algorithm, works like a search engine (a problem of finding 
+     intersection, by applying a deformation mask on keywords) much more 
+     efficient than in 1.xx branch
+   - passive fingerprinting much more acurate thanks to new matching algorithm
+   - possibility to launch P1P2P3 probes, or only P1P2 probes, or only P2 probe
+   - match IPv6 signatures against IPv4 ones
+   - API changes, not compatible with 1.xx version anymore
+   - DB schema changes, not compatible with 1.xx version anymore
+   - many bugfixes
+
 1.02 Wed May 31 18:50:03 CEST 2006
    - bugfix: in RST response to a probe when it has some L7 data
    - compatibility patches with upcoming Net::Packet 3.00

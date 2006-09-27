@@ -1,5 +1,5 @@
 #
-# $Id: SystemClass.pm,v 1.1.2.11.2.2 2006/05/31 16:49:57 gomor Exp $
+# $Id: SystemClass.pm,v 1.1.2.13.2.2 2006/06/08 18:55:42 gomor Exp $
 #
 package Net::SinFP::DB::SystemClass;
 use strict;
@@ -15,22 +15,20 @@ our @AS = qw(
 __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 
+our $Id     = $AS[0];
+our @Fields = @AS[1..$#AS];
+
+1;
+
 =head1 NAME
 
-Net::SinFP::DB::SystemClass - SystemClass SQL table
+Net::SinFP::DB::SystemClass - SystemClass database table
 
 =head1 DESCRIPTION
 
 Go to http://www.gomor.org/sinfp to know more.
 
 =cut
-
-our $Id     = qw(idSystemClass);
-our @Fields = qw(systemClass);
-
-sub getSystemClass {
-   shift->lookupString('systemClass', idSystemClass => shift);
-}
 
 =head1 AUTHOR
 
@@ -44,5 +42,3 @@ You may distribute this module under the terms of the Artistic license.
 See LICENSE.Artistic file in the source distribution archive.
 
 =cut
-
-1;

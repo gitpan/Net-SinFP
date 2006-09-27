@@ -1,5 +1,5 @@
 #
-# $Id: Signature.pm,v 1.1.2.11.2.2 2006/05/31 16:49:57 gomor Exp $
+# $Id: Signature.pm,v 1.1.2.13.2.7 2006/06/11 09:31:13 gomor Exp $
 #
 package Net::SinFP::DB::Signature;
 use strict;
@@ -10,80 +10,47 @@ our @ISA = qw(DBIx::SQLite::Simple::Table);
 
 our @AS = qw(
    idSignature
+   trusted
    idIpVersion
    idSystemClass
    idVendor
    idOs
    idOsVersion
-   idT1PatternBinary
-   idT1PatternTcpFlags
-   idT1PatternTcpWindow
-   idT1PatternTcpOptions
-   idT1PatternTcpMss
-   idT2PatternBinary
-   idT2PatternTcpFlags
-   idT2PatternTcpWindow
-   idT2PatternTcpOptions
-   idT2PatternTcpMss
-   idT3PatternBinary
-   idT3PatternTcpFlags
-   idT3PatternTcpWindow
-   idT3PatternTcpOptions
-   idT3PatternTcpMss
+   idOsVersionFamily
+   idP1PatternBinary
+   idP1PatternTcpFlags
+   idP1PatternTcpWindow
+   idP1PatternTcpOptions
+   idP1PatternTcpMss
+   idP2PatternBinary
+   idP2PatternTcpFlags
+   idP2PatternTcpWindow
+   idP2PatternTcpOptions
+   idP2PatternTcpMss
+   idP3PatternBinary
+   idP3PatternTcpFlags
+   idP3PatternTcpWindow
+   idP3PatternTcpOptions
+   idP3PatternTcpMss
 
-   matchAlgorithm
-   signatureType
+   matchType
+   matchMask
    ipVersion
    systemClass
    vendor
    os
    osVersion
+   osVersionFamily
 
-   t1PatternBinary
-   t1PatternTcpFlags
-   t1PatternTcpWindow
-   t1PatternTcpOptions
-   t1PatternTcpMss
-   t2PatternBinary
-   t2PatternTcpFlags
-   t2PatternTcpWindow
-   t2PatternTcpOptions
-   t2PatternTcpMss
-   t3PatternBinary
-   t3PatternTcpFlags
-   t3PatternTcpWindow
-   t3PatternTcpOptions
-   t3PatternTcpMss
-   t1PatternBinaryH1
-   t1PatternTcpFlagsH1
-   t1PatternTcpWindowH1
-   t1PatternTcpOptionsH1
-   t1PatternTcpMssH1
-   t2PatternBinaryH1
-   t2PatternTcpFlagsH1
-   t2PatternTcpWindowH1
-   t2PatternTcpOptionsH1
-   t2PatternTcpMssH1
-   t3PatternBinaryH1
-   t3PatternTcpFlagsH1
-   t3PatternTcpWindowH1
-   t3PatternTcpOptionsH1
-   t3PatternTcpMssH1
-   t1PatternBinaryH2
-   t1PatternTcpFlagsH2
-   t1PatternTcpWindowH2
-   t1PatternTcpOptionsH2
-   t1PatternTcpMssH2
-   t2PatternBinaryH2
-   t2PatternTcpFlagsH2
-   t2PatternTcpWindowH2
-   t2PatternTcpOptionsH2
-   t2PatternTcpMssH2
-   t3PatternBinaryH2
-   t3PatternTcpFlagsH2
-   t3PatternTcpWindowH2
-   t3PatternTcpOptionsH2
-   t3PatternTcpMssH2
+   sigP1H0
+   sigP2H0
+   sigP3H0
+   sigP1H1
+   sigP2H1
+   sigP3H1
+   sigP1H2
+   sigP2H2
+   sigP3H2
 );
 our @AA = qw(
    osVersionChildren
@@ -92,25 +59,20 @@ __PACKAGE__->cgBuildIndices;
 __PACKAGE__->cgBuildAccessorsScalar(\@AS);
 __PACKAGE__->cgBuildAccessorsArray(\@AA);
 
+our $Id     = $AS[0];
+our @Fields = @AS[1..$#AS-17];
+
+1;
+
 =head1 NAME
 
-Net::SinFP::DB::Signature - Signature SQL table
+Net::SinFP::DB::Signature - Signature database table
 
 =head1 DESCRIPTION
 
 Go to http://www.gomor.org/sinfp to know more.
 
 =cut
-
-our $Id     = qw(idSignature);
-our @Fields = qw(
-   idIpVersion idSystemClass idVendor idOs idOsVersion 
-   idT1PatternBinary idT1PatternTcpFlags idT1PatternTcpWindow
-   idT1PatternTcpOptions idT1PatternTcpMss idT2PatternBinary
-   idT2PatternTcpFlags idT2PatternTcpWindow idT2PatternTcpOptions
-   idT2PatternTcpMss idT3PatternBinary idT3PatternTcpFlags idT3PatternTcpWindow
-   idT3PatternTcpOptions idT3PatternTcpMss
-);
 
 =head1 AUTHOR
 
@@ -124,5 +86,3 @@ You may distribute this module under the terms of the Artistic license.
 See LICENSE.Artistic file in the source distribution archive.
 
 =cut
-
-1;
