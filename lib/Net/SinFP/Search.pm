@@ -1,5 +1,5 @@
 #
-# $Id: Search.pm,v 1.1.2.7 2006/06/12 21:31:30 gomor Exp $
+# $Id: Search.pm,v 1.1.2.9 2006/10/28 22:16:59 gomor Exp $
 #
 package Net::SinFP::Search;
 use strict;
@@ -46,6 +46,7 @@ sub new {
    $self->maskStandardList([
       'BH0FH0WH0OH0MH0',
       'BH1FH0WH0OH0MH0',
+      'BH0FH0WH0OH0MH1',
       'BH0FH0WH1OH0MH1',
       'BH1FH0WH1OH0MH1',
       'BH0FH0WH0OH1MH0',
@@ -55,9 +56,14 @@ sub new {
    $self->maskAdvancedList([
       'BH0FH0WH1OH1MH1',
       'BH1FH0WH1OH1MH1',
+      'BH0FH0WH1OH0MH2',
+      'BH0FH0WH2OH0MH1',
       'BH0FH0WH2OH0MH2',
       'BH0FH0WH0OH2MH0',
       'BH0FH0WH1OH2MH1',
+      'BH2FH0WH0OH0MH1',
+      'BH2FH0WH1OH0MH1',
+      'BH2FH0WH1OH1MH1',
       'BH2FH0WH2OH0MH2',
       'BH0FH0WH2OH1MH2',
       'BH1FH0WH2OH1MH2',

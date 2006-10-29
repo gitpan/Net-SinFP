@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# $Id: sinfp.pl,v 1.1.2.14.2.24 2006/08/15 13:34:41 gomor Exp $
+# $Id: sinfp.pl,v 1.1.2.14.2.27 2006/10/29 20:55:16 gomor Exp $
 #
 use strict;
 use warnings;
@@ -9,16 +9,21 @@ use lib "$Bin/../lib";
 
 use Getopt::Std;
 my %opts;
-getopts('d:i:I:p:r:t:f:v46m:M:PF:HOVs:k123aA:', \%opts);
+getopts('d:i:I:p:r:t:f:v46m:M:PF:HOVs:k123aA:C', \%opts);
 
 require Net::SinFP;
 use Net::SinFP::Consts qw(:matchMask);
 
 die("\n  -- SinFP - $Net::SinFP::VERSION --\n".
     "\n".
-    "Usage: sinfp.pl -i <targetIp> -p <openTcpPort>\n".
+    " o Information about signature database updates, and more:\n".
+    " o https://lists.sourceforge.net/lists/listinfo/sinfp-discuss\n".
+    "\n".
+    "Usage: $0 -i <targetIp> -p <openTcpPort>\n".
     "\n".
     " o Common parameters:\n".
+    "   -i <ip>     target IP\n".
+    "   -p <port>   target open TCP port (default: 80)\n".
     "   -d <dev>    network device to use\n".
     "   -I <ip>     source IP address to use\n".
     "   -3          run all probes (default)\n".
@@ -26,6 +31,7 @@ die("\n  -- SinFP - $Net::SinFP::VERSION --\n".
     "   -1          run only probe P2 (even stealthier)\n".
     "   -v          be verbose\n".
     "   -s <file>   signature file to use\n".
+    "   -C          print complete information about target operating system\n".
     "   -O          print only operating system\n".
     "   -V          print only operating system and its version family\n".
     "   -H          use HEURISTIC2 masks to match signatures (advanced users)\n".
@@ -236,6 +242,26 @@ sub _displayResultsAll {
    $buf;
 }
 
+sub _displayResultsShort {
+   my $sinfp = shift;
+
+   my $buf;
+   my %os;
+   for ($sinfp->resultList) {
+      $os{$_->os.':'.$_->osVersion} = $_;
+   }
+   for (sort keys %os) {
+      $buf .= $os{$_}->ipVersion;
+      $buf .= ': '.$os{$_}->matchMask.'/'.$os{$_}->matchType.
+         ': '.$os{$_}->systemClass.
+         ': '.$os{$_}->os.
+         ': '.$os{$_}->osVersion
+      ;
+      $buf .= "\n";
+   }
+   $buf;
+}
+
 sub displayResults {
    my $sinfp = shift;
 
@@ -263,8 +289,11 @@ sub displayResults {
    elsif ($opts{V}) {
       $buf .= _displayResultsOnlyOsAndVersionFamily($sinfp);
    }
-   else {
+   elsif ($opts{C}) {
       $buf .= _displayResultsAll($sinfp);
+   }
+   else {
+      $buf .= _displayResultsShort($sinfp);
    }
    print $buf;
 }
