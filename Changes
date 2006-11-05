@@ -1,5 +1,9 @@
 Revision history for Perl extension Net::SinFP.
 
+2.04 Sun Nov  5 18:59:48 CET 2006
+   - Search.pm: new deformation mask added
+   - new signatures (sinfp-20061101.db)
+
 2.03 Sun Oct 29 21:57:05 CET 2006
    - Search.pm: new deformation masks added
    - sinfp.pl: default displaying of OS information updated, it is shorter now

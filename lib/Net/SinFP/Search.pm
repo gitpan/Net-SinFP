@@ -1,5 +1,5 @@
 #
-# $Id: Search.pm,v 1.1.2.9 2006/10/28 22:16:59 gomor Exp $
+# $Id: Search.pm,v 1.1.2.10 2006/11/05 17:57:51 gomor Exp $
 #
 package Net::SinFP::Search;
 use strict;
@@ -48,6 +48,7 @@ sub new {
       'BH1FH0WH0OH0MH0',
       'BH0FH0WH0OH0MH1',
       'BH0FH0WH1OH0MH1',
+      'BH1FH0WH0OH0MH1',
       'BH1FH0WH1OH0MH1',
       'BH0FH0WH0OH1MH0',
       'BH1FH0WH0OH1MH0',

@@ -2,6 +2,7 @@ bin/sinfp.db
 bin/sinfp.pl
 Changes
 db-schema.dot
+INSTALL
 lib/Net/SinFP/Consts.pm
 lib/Net/SinFP/DB/IpVersion.pm
 lib/Net/SinFP/DB/Os.pm
