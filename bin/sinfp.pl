@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# $Id: sinfp.pl,v 1.1.2.14.2.27 2006/10/29 20:55:16 gomor Exp $
+# $Id: sinfp.pl,v 1.1.2.14.2.28 2006/11/18 12:37:18 gomor Exp $
 #
 use strict;
 use warnings;
@@ -331,6 +331,7 @@ sub createAnonymizedPcapFile {
 
    my @new;
    my $src = ($in->frames)[0]->l3->src;
+   $Env->noFramePadding(1);
    for ($in->frames) {
       if ($_->l3->src eq $src) {
          $_->l3->src('127.0.0.1');
@@ -344,7 +345,6 @@ sub createAnonymizedPcapFile {
          $_->l3->checksum(666);
          $_->l4->checksum(666);
       }
-      $_->noPadding(1);
       $_->pack;
       push @new, $_;
    }

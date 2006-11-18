@@ -1,11 +1,11 @@
 #
-# $Id: SinFP.pm,v 1.8.2.33.2.38 2006/11/05 17:59:05 gomor Exp $
+# $Id: SinFP.pm,v 1.8.2.33.2.39 2006/11/18 12:38:52 gomor Exp $
 #
 package Net::SinFP;
 use strict;
 use warnings;
 
-our $VERSION = '2.04';
+our $VERSION = '2.05';
 
 require Class::Gomor::Array;
 our @ISA = qw(Class::Gomor::Array);

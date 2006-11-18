@@ -1,14 +1,17 @@
-# http://module-build.sourceforge.net/META-spec.html
-#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
-name:         Net-SinFP
-version:      2.04
-version_from: lib/Net/SinFP.pm
-installdirs:  site
-requires:
+--- #YAML:1.0
+name:                Net-SinFP
+version:             2.05
+abstract:            a full operating system stack fingerprinting suite
+license:             Artistic
+generated_by:        ExtUtils::MakeMaker version 6.31
+distribution_type:   module
+requires:     
     Class::Gomor:                  0
     DBIx::SQLite::Simple:          0.33
-    Net::Packet:                   3.00
+    Net::Packet:                   3.20
     Net::Packet::Target:           0
-
-distribution_type: module
-generated_by: ExtUtils::MakeMaker version 6.30
+meta-spec:
+    url:     http://module-build.sourceforge.net/META-spec-v1.2.html
+    version: 1.2
+author:
+    - GomoR <sinfp@gomor.org>

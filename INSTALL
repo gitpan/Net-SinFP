@@ -17,7 +17,10 @@ Under Linux/FreeBSD/OpenBSD/NetBSD and related:
 
 Under Windows:
 
-  This was tested with ActivePerl 5.8.8.819, with PPM v4.0.
+  First, install WinPcap 3.1: http://www.winpcap.org .
+
+  The following procedure was tested with ActivePerl 5.8.8.819, 
+  with PPM v4.0.
 
   # If you are behind a proxy:
   C:\> set http_proxy=http://username:password@proxy:port
@@ -56,4 +59,11 @@ Under Windows:
   C:\> ppm repo 1 on
 
   sinfp.pl will be in C:\perl\sinfp\bin.
+
+3. If you have error messages loading some SinFP related DLLs
+
+  Go to www.microsoft.com, then in the search field, type in:
+  vcredist_x86.exe
+
+  Download it, install it.
 
