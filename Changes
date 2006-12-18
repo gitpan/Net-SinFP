@@ -1,5 +1,13 @@
 Revision history for Perl extension Net::SinFP.
 
+2.06 Mon Dec 18 16:35:25 CET 2006
+   - bugfix: in passive mode, when a frame has no TCP layer, do not process it
+   - bugfix: in passive mode, when a user specifies -F, SinFP must use it
+   - pod: for Result.pm
+   - examples: now ships with example files in examples/ directory
+   - tests: more tests (pod consistency, pod coverage)
+   - new signatures (sinfp-20061218.db, 140 signatures)
+
 2.05 Sat Nov 18 12:40:41 CET 2006
    - bugfix: due to changes in Net::Packet 3.xx, now requires version 3.2x
    - new signatures (sinfp-20061118.db)

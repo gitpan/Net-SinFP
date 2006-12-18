@@ -2,6 +2,9 @@ bin/sinfp.db
 bin/sinfp.pl
 Changes
 db-schema.dot
+examples/sinfp-active.pl
+examples/sinfp-passive-offline.pl
+examples/sinfp-passive-online.pl
 INSTALL
 lib/Net/SinFP/Consts.pm
 lib/Net/SinFP/DB/IpVersion.pm
@@ -30,3 +33,5 @@ MANIFEST
 META.yml			Module meta-data (added by MakeMaker)
 README
 t/01-use.t
+t/02-pod-coverage.t
+t/03-test-pod.t

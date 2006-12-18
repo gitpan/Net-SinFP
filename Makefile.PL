@@ -1,7 +1,9 @@
 #
-# $Id: Makefile.PL,v 1.4.2.12.2.6 2006/11/18 12:43:49 gomor Exp $
+# $Id: Makefile.PL,v 1.4.2.12.2.7 2006/12/18 15:36:56 gomor Exp $
 #
 use ExtUtils::MakeMaker;
+
+require v5.6.1;
 
 WriteMakefile(
    NAME          => 'Net::SinFP',

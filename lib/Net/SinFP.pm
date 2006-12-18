@@ -1,11 +1,11 @@
 #
-# $Id: SinFP.pm,v 1.8.2.33.2.39 2006/11/18 12:38:52 gomor Exp $
+# $Id: SinFP.pm,v 1.8.2.33.2.40 2006/12/18 09:51:20 gomor Exp $
 #
 package Net::SinFP;
 use strict;
 use warnings;
 
-our $VERSION = '2.05';
+our $VERSION = '2.06';
 
 require Class::Gomor::Array;
 our @ISA = qw(Class::Gomor::Array);
@@ -221,12 +221,14 @@ sub _startOfflinePassive {
 
    $self->_dump($self->getDump);
 
+   $self->_dump->filter($self->filter) if $self->filter;
+
    $self->_dump->start;
    $self->_dump->nextAll;
    croak("No frames captured\n") unless ($self->_dump->frames)[0];
 
    for my $frame ($self->_dump->frames) {
-      if ($frame->l4->isTcp) {
+      if ($frame->l4 && $frame->l4->isTcp) {
          if ($frame->l4->flags == (NP_TCP_FLAG_SYN)
          ||  $frame->l4->flags == (NP_TCP_FLAG_SYN|NP_TCP_FLAG_ACK) ) {
             $self->_passiveMatchPrepare($frame);

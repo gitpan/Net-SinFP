@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Net-SinFP
-version:             2.05
+version:             2.06
 abstract:            a full operating system stack fingerprinting suite
 license:             Artistic
 generated_by:        ExtUtils::MakeMaker version 6.31
