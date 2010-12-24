@@ -1,5 +1,5 @@
 #
-# $Id: Makefile.PL,v 1.4.2.12.2.7 2006/12/18 15:36:56 gomor Exp $
+# $Id: Makefile.PL 1659 2010-12-24 12:24:19Z gomor $
 #
 use ExtUtils::MakeMaker;
 
@@ -9,7 +9,7 @@ WriteMakefile(
    NAME          => 'Net::SinFP',
    VERSION_FROM  => 'lib/Net/SinFP.pm',
    ABSTRACT_FROM => 'lib/Net/SinFP.pm',
-   LICENSE       => 'Artistic',
+   LICENSE       => 'artistic',
    PREREQ_PM     => {
       Net::Packet          => '3.20',
       Net::Packet::Target  => 0,
@@ -17,5 +17,5 @@ WriteMakefile(
       DBIx::SQLite::Simple => '0.33',
    },
    EXE_FILES => [ 'bin/sinfp.pl', 'bin/sinfp.db', ],
-   AUTHOR    => 'GomoR <sinfp@gomor.org>',
+   AUTHOR    => 'GomoR <gomor-cpan_at_gomor.org>',
 );

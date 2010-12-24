@@ -1,5 +1,5 @@
 #
-# $Id: OsVersionChildren.pm,v 1.1.2.6.2.2 2006/06/08 18:55:42 gomor Exp $
+# $Id: OsVersionChildren.pm 1659 2010-12-24 12:24:19Z gomor $
 #
 package Net::SinFP::DB::OsVersionChildren;
 use strict;
@@ -35,7 +35,7 @@ Patrice E<lt>GomoRE<gt> Auffret
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2006, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2005-2010, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of the Artistic license.
 See LICENSE.Artistic file in the source distribution archive.

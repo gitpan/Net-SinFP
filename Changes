@@ -1,5 +1,12 @@
 Revision history for Perl extension Net::SinFP.
 
+2.07 Fri Dec 24 14:21:08 CET 2010
+   - bugfix: padding vs payload issue for TCP options
+   - update: more verbose message on closed/filtered port
+   - update: copyritht notice
+   - update: mailing list link
+   - new signatures (sinfp-20101224.db: 158 signatures)
+
 2.06 Mon Dec 18 16:35:25 CET 2006
    - bugfix: in passive mode, when a frame has no TCP layer, do not process it
    - bugfix: in passive mode, when a user specifies -F, SinFP must use it

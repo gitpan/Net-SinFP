@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# $Id: sinfp.pl,v 1.1.2.14.2.28 2006/11/18 12:37:18 gomor Exp $
+# $Id: sinfp.pl 1659 2010-12-24 12:24:19Z gomor $
 #
 use strict;
 use warnings;
@@ -17,7 +17,7 @@ use Net::SinFP::Consts qw(:matchMask);
 die("\n  -- SinFP - $Net::SinFP::VERSION --\n".
     "\n".
     " o Information about signature database updates, and more:\n".
-    " o https://lists.sourceforge.net/lists/listinfo/sinfp-discuss\n".
+    " o http://lists.gomor.org/mailman/listinfo/sinfp\n".
     "\n".
     "Usage: $0 -i <targetIp> -p <openTcpPort>\n".
     "\n".
@@ -184,7 +184,8 @@ sub noReplyForP2 {
 sub displayWarningAboutClosedPort {
    my $sinfp = shift;
    if (noReplyForP1($sinfp) && noReplyForP2($sinfp)) {
-      print "*** Cannot fingerprint a closed or filtered port\n";
+      print "*** [".$sinfp->target->ip.":".$sinfp->target->port."]: ".
+            "Cannot fingerprint a closed or filtered port\n";
       return 1;
    }
    undef;

@@ -1,5 +1,5 @@
 //
-// $Id: db-schema.dot,v 1.1.2.5.4.3 2006/06/11 17:17:03 gomor Exp $
+// $Id: db-schema.dot 586 2006-06-11 17:17:03Z gomor $
 //
 
 digraph db_schema {

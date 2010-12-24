@@ -1,11 +1,11 @@
 #
-# $Id: SinFP.pm,v 1.8.2.33.2.40 2006/12/18 09:51:20 gomor Exp $
+# $Id: SinFP.pm 1659 2010-12-24 12:24:19Z gomor $
 #
 package Net::SinFP;
 use strict;
 use warnings;
 
-our $VERSION = '2.06';
+our $VERSION = '2.07';
 
 require Class::Gomor::Array;
 our @ISA = qw(Class::Gomor::Array);
@@ -430,7 +430,7 @@ sub _analyzeTcpWindow {
 sub _analyzeTcpOptionsAndMss {
    my $self = shift;
    my ($p) = @_;
-   # Rewrite timestamp values, if > 0 overwrite with ffff, for each timestamp
+   # Rewrite timestamp values, if > 0 overwrite with ffff, for each timestamp
    my $mss;
    my $opts;
    if ($opts = unpack('H*', $p->reply->l4->options)) {
@@ -442,7 +442,7 @@ sub _analyzeTcpOptionsAndMss {
             $opts =~ s/(080a........)......../$1ffffffff/;
          }
       }
-      # Move MSS value in its own field
+      # Move MSS value in its own field
       if ($opts =~ /0204(....)/) {
          if ($1) {
             $mss = sprintf("%d", hex($1));
@@ -450,7 +450,17 @@ sub _analyzeTcpOptionsAndMss {
          }
       }
    }
-   $opts .= unpack('H*', $p->reply->l7->data) if $p->reply->l7;
+   # bugfix: handling of padding vs payload. Should be corrected 
+   # when using Net::Frame (Net::SinFP 3.x planned)
+   # Ok, this is dirty hack.
+   if ($p->reply->l3->isIpv4) {
+      if ($p->reply->l3->length > 44 && $p->reply->l7) {
+         $opts .= unpack('H*', $p->reply->l7->data);
+      }
+   }
+   else {
+      $opts .= unpack('H*', $p->reply->l7->data) if $p->reply->l7;
+   }
 
    $opts = '0' unless $opts;
    $mss  = '0' unless $mss;
@@ -603,7 +613,7 @@ Patrice E<lt>GomoRE<gt> Auffret
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2006, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2005-2010, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of the Artistic license.
 See LICENSE.Artistic file in the source distribution archive.
