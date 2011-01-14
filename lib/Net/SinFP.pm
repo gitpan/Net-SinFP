@@ -1,11 +1,11 @@
 #
-# $Id: SinFP.pm 1659 2010-12-24 12:24:19Z gomor $
+# $Id: SinFP.pm 1684 2011-01-12 14:24:16Z gomor $
 #
 package Net::SinFP;
 use strict;
 use warnings;
 
-our $VERSION = '2.07';
+our $VERSION = '2.08';
 
 require Class::Gomor::Array;
 our @ISA = qw(Class::Gomor::Array);
@@ -613,7 +613,7 @@ Patrice E<lt>GomoRE<gt> Auffret
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2010, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2005-2011, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of the Artistic license.
 See LICENSE.Artistic file in the source distribution archive.

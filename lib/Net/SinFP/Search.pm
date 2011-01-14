@@ -1,5 +1,5 @@
 #
-# $Id: Search.pm 1659 2010-12-24 12:24:19Z gomor $
+# $Id: Search.pm 1683 2011-01-12 14:23:45Z gomor $
 #
 package Net::SinFP::Search;
 use strict;
@@ -47,6 +47,7 @@ sub new {
       'BH0FH0WH0OH0MH0',
       'BH1FH0WH0OH0MH0',
       'BH0FH0WH0OH0MH1',
+      'BH0FH0WH1OH0MH0',
       'BH0FH0WH1OH0MH1',
       'BH1FH0WH0OH0MH1',
       'BH1FH0WH1OH0MH1',
@@ -58,6 +59,7 @@ sub new {
       'BH0FH0WH1OH1MH1',
       'BH1FH0WH1OH1MH1',
       'BH0FH0WH1OH0MH2',
+      'BH0FH0WH2OH0MH0',
       'BH0FH0WH2OH0MH1',
       'BH0FH0WH2OH0MH2',
       'BH0FH0WH0OH2MH0',
@@ -371,7 +373,7 @@ Patrice E<lt>GomoRE<gt> Auffret
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2010, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2005-2011, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of the Artistic license.
 See LICENSE.Artistic file in the source distribution archive.

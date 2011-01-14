@@ -1,5 +1,11 @@
 Revision history for Perl extension Net::SinFP.
 
+2.08 Wed Jan 12 15:24:24 CET 2011
+   - update: new deformation masks
+   - update: improvements on passive fingerprinting analysis
+   => greetz to Goulag Parkinson, IpMorph rulez.
+   - update: copyright notice
+
 2.07 Fri Dec 24 14:21:08 CET 2010
    - bugfix: padding vs payload issue for TCP options
    - update: more verbose message on closed/filtered port

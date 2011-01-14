@@ -1,5 +1,5 @@
 #
-# $Id: DB.pm 1659 2010-12-24 12:24:19Z gomor $
+# $Id: DB.pm 1682 2011-01-12 14:23:29Z gomor $
 #
 package Net::SinFP::DB;
 use strict;
@@ -134,12 +134,9 @@ sub _cleanCache {
 sub _rewriteBinary {
    my $self = shift;
    my ($b) = @_;
-   my $p0 = $b->patternBinaryHeuristic0;
-   my $p1 = $b->patternBinaryHeuristic1;
-   my $p2 = $b->patternBinaryHeuristic2;
-   $p0 =~ s/(?:2|3)/1/g;
-   $p1 =~ s/(?:2|3)/1/g;
-   $p2 =~ s/(?:2|3)/1/g;
+   (my $p0 = $b->patternBinaryHeuristic0) =~ s/^B.*/B...../;
+   (my $p1 = $b->patternBinaryHeuristic1) =~ s/^B.*/B...../;
+   (my $p2 = $b->patternBinaryHeuristic2) =~ s/^B.*/B...../;
    $b->patternBinaryHeuristic0($p0);
    $b->patternBinaryHeuristic1($p1);
    $b->patternBinaryHeuristic2($p2);
@@ -150,12 +147,9 @@ sub _rewriteBinary {
 sub _rewriteTcpOptions {
    my $self = shift;
    my ($o) = @_;
-   my $o0 = $o->patternTcpOptionsHeuristic0;
-   my $o1 = $o->patternTcpOptionsHeuristic1;
-   my $o2 = $o->patternTcpOptionsHeuristic2;
-   $o0 =~ s/44454144/......../;
-   $o1 =~ s/44454144/......../;
-   $o2 =~ s/44454144/......../;
+   (my $o0 = $o->patternTcpOptionsHeuristic0) =~ s/44454144/......../;
+   (my $o1 = $o->patternTcpOptionsHeuristic1) =~ s/44454144/......../;
+   (my $o2 = $o->patternTcpOptionsHeuristic2) =~ s/44454144/......../;
    $o->patternTcpOptionsHeuristic0($o0);
    $o->patternTcpOptionsHeuristic1($o1);
    $o->patternTcpOptionsHeuristic2($o2);
@@ -304,7 +298,7 @@ Patrice E<lt>GomoRE<gt> Auffret
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005-2010, Patrice E<lt>GomoRE<gt> Auffret
+Copyright (c) 2005-2011, Patrice E<lt>GomoRE<gt> Auffret
 
 You may distribute this module under the terms of the Artistic license.
 See LICENSE.Artistic file in the source distribution archive.
