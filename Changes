@@ -1,5 +1,10 @@
 Revision history for Perl extension Net::SinFP.
 
+2.09 Sun Mar 13 12:45:47 CET 2011
+   - bugfix: in pod for Net::SinFP::Consts
+   - new signatures (sinfp-20110125.db: 188 signatures)
+   - NOTE: this should be the last release in 2.xx branch
+
 2.08 Wed Jan 12 15:24:24 CET 2011
    - update: new deformation masks
    - update: improvements on passive fingerprinting analysis

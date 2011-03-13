@@ -1,5 +1,5 @@
 #
-# $Id: Consts.pm 1684 2011-01-12 14:24:16Z gomor $
+# $Id: Consts.pm 1927 2011-02-22 13:43:30Z gomor $
 #
 package Net::SinFP::Consts;
 use strict;
@@ -36,15 +36,15 @@ use constant NS_MATCH_MASK_HEURISTIC2 => 'HEURISTIC2';
 
 1;
 
+__END__
+
 =head1 NAME
 
-Net::SinFP:Consts - all constants are defined here
+Net::SinFP::Consts - all constants are defined here
 
 =head1 DESCRIPTION
 
 Go to http://www.gomor.org/sinfp to know more.
-
-=cut
 
 =head1 AUTHOR
 

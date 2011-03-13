@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:               Net-SinFP
-version:            2.08
+version:            2.09
 abstract:           a full operating system stack fingerprinting suite
 author:
     - GomoR <gomor-cpan_at_gomor.org>
